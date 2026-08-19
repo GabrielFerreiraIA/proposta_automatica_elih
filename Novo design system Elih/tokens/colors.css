@@ -1,0 +1,85 @@
+/* Elih Seguros — Color tokens
+   Base hue: navy #011246 (H225 S97 L14). All scales share this hue family
+   for cohesion; neutrals carry a faint cool-blue cast instead of pure gray. */
+
+:root {
+  /* ---- Navy (primary) ---- */
+  --navy-50:  #f2f5ff;
+  --navy-100: #e1e8fe;
+  --navy-150: #c9d6fd;
+  --navy-200: #a9bdf9;
+  --navy-300: #7796f3;
+  --navy-400: #3e69ea;
+  --navy-500: #1142d4;
+  --navy-600: #0931aa;
+  --navy-700: #042381;
+  --navy-800: #02195f;
+  --navy-900: #011246; /* brand base — from logo */
+  --navy-950: #010b28;
+
+  /* ---- Neutral (cool slate, tied to navy hue) ---- */
+  --neutral-0:    #ffffff;
+  --neutral-50:   #fafbfd;
+  --neutral-100:  #f2f4f7;
+  --neutral-200:  #e7e9ef;
+  --neutral-300:  #d6d9e1;
+  --neutral-400:  #b3b9c6;
+  --neutral-500:  #878fa1;
+  --neutral-600:  #606a80;
+  --neutral-700:  #454c5f;
+  --neutral-800:  #2d3443;
+  --neutral-900:  #1a202e;
+  --neutral-950:  #0d121c;
+  --neutral-1000: #000000;
+
+  /* ---- Accent (sky — for highlights, links, focus, small pops on white) ---- */
+  --accent-100: #e2eefd;
+  --accent-300: #7db4f7;
+  --accent-500: #2582f4;
+  --accent-700: #0f5cc4;
+
+  /* ---- Semantic ---- */
+  --success-100: #e8f7f0;
+  --success-500: #298e5f;
+  --success-700: #1c6b47;
+
+  --warning-100: #fef4dc;
+  --warning-500: #f29e0d;
+  --warning-700: #b97505;
+
+  --danger-100: #fce8e9;
+  --danger-500: #d3222e;
+  --danger-700: #a01820;
+
+  /* ---- Semantic aliases ---- */
+  --brand: var(--navy-900);
+  --brand-strong: var(--navy-950);
+  --brand-soft: var(--navy-100);
+
+  --bg-page: var(--neutral-0);
+  --bg-section: var(--neutral-50);
+  --bg-section-alt: var(--navy-100);
+  --bg-dark: var(--navy-900);
+  --bg-dark-strong: var(--navy-950);
+
+  --surface-card: var(--neutral-0);
+  --surface-card-dark: var(--navy-800);
+  --surface-sunken: var(--neutral-100);
+
+  --border-subtle: var(--neutral-200);
+  --border-default: var(--neutral-300);
+  --border-strong: var(--navy-300);
+  --border-on-dark: rgba(255, 255, 255, 0.14);
+  --border-on-dark-strong: rgba(255, 255, 255, 0.28);
+
+  --text-primary: var(--navy-950);
+  --text-secondary: var(--neutral-700);
+  --text-tertiary: var(--neutral-500);
+  --text-on-dark: #ffffff;
+  --text-on-dark-secondary: rgba(255, 255, 255, 0.72);
+  --text-on-dark-tertiary: rgba(255, 255, 255, 0.5);
+  --text-link: var(--accent-700);
+  --text-link-hover: var(--navy-900);
+
+  --focus-ring: var(--accent-500);
+}

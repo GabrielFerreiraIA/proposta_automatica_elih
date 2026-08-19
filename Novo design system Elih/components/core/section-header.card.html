@@ -1,0 +1,20 @@
+<!-- @dsCard group="Components" viewport="700x220" name="Section header" -->
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
+<div id="root" style="padding:24px;background:#fff;font-family:var(--font-body);"></div>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel">
+  const { SectionHeader, Button } = window.ElihSeguros;
+  function Demo() {
+    return (
+      <SectionHeader
+        overline="Vitrine de ofertas"
+        title="Ofertas em destaque para associados SEESP"
+        action={<Button variant="ghost" withArrow={false} size="sm">Ver todas</Button>}
+      />
+    );
+  }
+  ReactDOM.createRoot(document.getElementById('root')).render(<Demo />);
+</script>

@@ -1,0 +1,854 @@
+/* =========================================================================
+   Elih Seguros — folha de estilo da proposta em PDF (A4)
+   Tokens importados de "Novo design system Elih" v1.1:
+   navy #011246, Plus Jakarta Sans (display) + Nunito (corpo),
+   radius generoso, sombras tingidas de navy, sem gradiente metálico.
+   ========================================================================= */
+
+/* As fontes vêm de fontes.css, embutidas em base64 — ver renderer._css_pdf().
+   Nada aqui pode depender de rede: a geração do PDF roda offline. */
+
+:root {
+  --navy-50:  #f2f5ff;
+  --navy-100: #e1e8fe;
+  --navy-150: #c9d6fd;
+  --navy-200: #a9bdf9;
+  --navy-300: #7796f3;
+  --navy-500: #1142d4;
+  --navy-700: #042381;
+  --navy-800: #02195f;
+  --navy-900: #011246;
+  --navy-950: #010b28;
+
+  --neutral-0:   #ffffff;
+  --neutral-50:  #fafbfd;
+  --neutral-100: #f2f4f7;
+  --neutral-200: #e7e9ef;
+  --neutral-300: #d6d9e1;
+  --neutral-500: #878fa1;
+  --neutral-600: #606a80;
+  --neutral-700: #454c5f;
+
+  --accent-100: #e2eefd;
+  --accent-300: #7db4f7;
+  --accent-500: #2582f4;
+  --accent-700: #0f5cc4;
+
+  --success-100: #e8f7f0;
+  --success-500: #298e5f;
+  --success-700: #1c6b47;
+  --warning-100: #fef4dc;
+  --warning-700: #b97505;
+
+  --text-primary: var(--navy-950);
+  --text-secondary: var(--neutral-700);
+  --text-tertiary: var(--neutral-500);
+  --border-subtle: var(--neutral-200);
+  --border-on-dark: rgba(255, 255, 255, 0.14);
+
+  --font-display: 'Plus Jakarta Sans', ui-sans-serif, sans-serif;
+  --font-body: 'Nunito', -apple-system, sans-serif;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 999px;
+
+  --shadow-sm: 0 2px 8px rgba(1, 18, 70, 0.08);
+  --shadow-md: 0 8px 24px rgba(1, 18, 70, 0.10);
+}
+
+@page { size: A4; margin: 0; }
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  background: var(--neutral-100);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.page {
+  position: relative;
+  width: 210mm;
+  height: 297mm;
+  padding: 14mm 15mm 13mm;
+  background: var(--neutral-0);
+  overflow: hidden;
+  page-break-after: always;
+  display: flex;
+  flex-direction: column;
+}
+.page:last-child { page-break-after: auto; }
+
+/* ---------------------------------------------------------------- capa -- */
+
+.capa {
+  padding: 0;
+  background: var(--navy-900);
+  color: #fff;
+  justify-content: space-between;
+}
+.capa--imagem { padding: 0; background: var(--neutral-0); }
+.capa__bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+.capa__veu {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(178deg, rgba(1, 11, 40, 0.30) 0%, rgba(1, 11, 40, 0.62) 52%, rgba(1, 11, 40, 0.93) 100%);
+}
+.capa__conteudo {
+  position: relative;
+  height: 100%;
+  padding: 20mm 18mm 16mm;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+/* wordmark navy sobre transparente, invertida para branco no fundo escuro */
+.capa__logo {
+  height: 9mm;
+  width: auto;
+  align-self: flex-start;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+}
+.capa__marca-dagua {
+  position: absolute;
+  right: -34mm;
+  top: 62mm;
+  width: 118mm;
+  height: auto;
+  opacity: 0.05;
+  filter: brightness(0) invert(1);
+}
+.capa__overline {
+  font-family: var(--font-display);
+  font-size: 9.5pt;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--navy-200);
+  margin-bottom: 5mm;
+}
+.capa__titulo {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 30pt;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  margin-bottom: 4mm;
+}
+.capa__sub {
+  font-size: 12pt;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.78);
+  max-width: 125mm;
+}
+.capa__chips { display: flex; flex-wrap: wrap; gap: 2.5mm; margin-top: 7mm; }
+.capa__chip {
+  font-family: var(--font-display);
+  font-size: 8.5pt;
+  font-weight: 600;
+  padding: 2mm 4mm;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+}
+.capa__rodape {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 8mm;
+  padding-top: 6mm;
+  border-top: 1px solid var(--border-on-dark);
+}
+.capa__vendedor-nome {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 12pt;
+}
+.capa__vendedor-cargo {
+  font-size: 8.5pt;
+  color: var(--accent-300);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 1.5mm;
+}
+.capa__contato { font-size: 9.5pt; color: rgba(255, 255, 255, 0.72); line-height: 1.55; }
+.capa__data { font-size: 9pt; color: rgba(255, 255, 255, 0.5); text-align: right; }
+
+/* Ficha de identificação: aparece no topo da página do plano quando a capa é
+   uma imagem fechada e não comporta os dados dinâmicos. */
+.ficha {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4mm;
+  background: var(--neutral-50);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 3.4mm 5mm;
+  margin-bottom: 6mm;
+}
+.ficha__rot {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 6.5pt;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-bottom: 0.8mm;
+}
+.ficha__val {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 9pt;
+  color: var(--text-primary);
+}
+
+/* ------------------------------------------------------ topo das páginas -- */
+
+.topo {
+  display: flex;
+  align-items: center;
+  padding-bottom: 4mm;
+  margin-bottom: 7mm;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.topo__marca { display: flex; align-items: center; gap: 3mm; }
+.topo__mark { height: 8mm; width: auto; }
+.topo__wordmark { height: 4.4mm; width: auto; }
+.topo__meta {
+  font-size: 8pt;
+  color: var(--text-tertiary);
+  text-align: right;
+  line-height: 1.45;
+}
+
+.rodape {
+  margin-top: auto;
+  padding-top: 4mm;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 7.5pt;
+  color: var(--text-tertiary);
+}
+.rodape strong { color: var(--text-secondary); font-weight: 700; }
+
+/* ------------------------------------------------------------ títulos -- */
+
+.overline {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 8pt;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--navy-500);
+  display: block;
+  margin-bottom: 1.5mm;
+}
+.overline--dark { color: var(--navy-200); }
+
+h1.titulo {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 21pt;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+h2.secao {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13pt;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  margin-bottom: 3mm;
+}
+h3.sub {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 10pt;
+  letter-spacing: -0.01em;
+}
+
+.bloco { margin-bottom: 5mm; }
+.bloco:last-child { margin-bottom: 0; }
+
+/* --------------------------------------------------------- cabeça plano -- */
+
+.plano-head {
+  display: flex;
+  gap: 5mm;
+  align-items: flex-start;
+  margin-bottom: 5mm;
+}
+.operadora-logo {
+  height: 14mm;
+  max-width: 40mm;
+  width: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.operadora-badge {
+  flex-shrink: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 11pt;
+  letter-spacing: -0.01em;
+  color: var(--navy-900);
+  background: var(--navy-50);
+  border: 1px solid var(--navy-150);
+  border-radius: var(--radius-md);
+  padding: 3.5mm 5mm;
+  text-align: center;
+  line-height: 1.15;
+  max-width: 42mm;
+}
+.operadora-badge span {
+  display: block;
+  font-size: 6.5pt;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--navy-500);
+  margin-bottom: 1mm;
+}
+
+.badges { display: flex; flex-wrap: wrap; gap: 2mm; margin-top: 3mm; }
+.badge {
+  font-family: var(--font-display);
+  font-size: 8pt;
+  font-weight: 600;
+  padding: 1.4mm 3.2mm;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-subtle);
+  background: var(--neutral-50);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.badge--positivo {
+  background: var(--success-100);
+  border-color: rgba(41, 142, 95, 0.22);
+  color: var(--success-700);
+}
+.badge--abrangencia {
+  background: var(--navy-900);
+  border-color: var(--navy-900);
+  color: #fff;
+}
+
+/* ------------------------------------------------------------- resumo -- */
+
+.resumo {
+  background: var(--navy-50);
+  border: 1px solid var(--navy-100);
+  border-radius: var(--radius-lg);
+  padding: 5mm 6mm;
+}
+.resumo ul { list-style: none; display: grid; gap: 2.4mm; }
+.resumo li {
+  position: relative;
+  padding-left: 6mm;
+  font-size: 9.5pt;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+.resumo li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 1.3mm;
+  width: 3.6mm;
+  height: 3.6mm;
+  border-radius: var(--radius-full);
+  background: var(--navy-900);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+  background-size: 2.4mm;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* ------------------------------------------------------------ tabelas -- */
+
+.tabela {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 9pt;
+}
+.tabela, .tabela tr, .tabela thead, .tabela tbody { break-inside: avoid; page-break-inside: avoid; }
+.tabela thead th {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 7.5pt;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  text-align: left;
+  padding: 0 3mm 2mm;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.tabela thead th:last-child,
+.tabela tbody td:last-child { text-align: right; }
+.tabela tbody td {
+  padding: 2.6mm 3mm;
+  border-bottom: 1px solid var(--neutral-100);
+  color: var(--text-secondary);
+}
+.tabela tbody tr:last-child td { border-bottom: none; }
+.tabela .faixa {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.tabela .valor {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 10pt;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.tabela--compacta tbody td { padding: 1.7mm 3mm; font-size: 8.2pt; }
+
+.card-valores {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 5mm;
+  box-shadow: var(--shadow-sm);
+}
+
+.total {
+  margin-top: 4mm;
+  background: var(--navy-900);
+  border-radius: var(--radius-lg);
+  padding: 4.5mm 6mm;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #fff;
+}
+.total__rotulo {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 9pt;
+}
+.total__rotulo span {
+  display: block;
+  font-size: 7.5pt;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 0.6mm;
+}
+.total__valor {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 20pt;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.total__valor small { font-size: 10pt; font-weight: 600; color: rgba(255, 255, 255, 0.65); }
+
+.nota {
+  font-size: 7.5pt;
+  line-height: 1.5;
+  color: var(--text-tertiary);
+  margin-top: 2.5mm;
+}
+
+/* ------------------------------------------------------------- grades -- */
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; }
+.grid-2--assimetrica { grid-template-columns: 1.15fr 1fr; }
+
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3mm; margin-bottom: 5mm; }
+.stat {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 3.5mm 4mm;
+  background: var(--neutral-50);
+}
+.stat__num {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 17pt;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--navy-900);
+}
+.stat__rot {
+  font-size: 7.5pt;
+  color: var(--text-tertiary);
+  margin-top: 1.4mm;
+  line-height: 1.35;
+}
+
+.rede-lista { list-style: none; display: grid; gap: 1.6mm; }
+.rede-lista li {
+  display: flex;
+  justify-content: space-between;
+  gap: 3mm;
+  align-items: baseline;
+  font-size: 8.4pt;
+  line-height: 1.35;
+  padding-bottom: 1.6mm;
+  border-bottom: 1px solid var(--neutral-100);
+}
+.rede-lista li:last-child { border-bottom: none; }
+.rede-lista .nome { color: var(--text-secondary); }
+.rede-lista .cidade {
+  font-family: var(--font-display);
+  font-size: 6.8pt;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--navy-500);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.legenda-tipos {
+  font-size: 7.2pt;
+  color: var(--text-tertiary);
+  line-height: 1.5;
+  margin-top: 2.5mm;
+}
+
+/* ------------------------------------------------------- comparativo -- */
+
+/* Sem isto o Chromium quebra a tabela na paginação e a última linha é comida
+   pelo overflow:hidden da página — some do PDF sem gerar transbordo medível. */
+.comp-wrap, .comp, .comp tr, .comp thead, .comp tbody { break-inside: avoid; page-break-inside: avoid; }
+.comp-wrap { overflow: visible; }
+.comp {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 8.6pt;
+  table-layout: fixed;
+}
+.comp th, .comp td { padding: 2mm 2.4mm; text-align: center; vertical-align: middle; }
+
+.comp__rot {
+  text-align: left !important;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 8pt;
+  color: var(--text-secondary);
+  width: 34%;
+}
+
+.comp__plano {
+  border-top-left-radius: var(--radius-md);
+  border-top-right-radius: var(--radius-md);
+  background: var(--neutral-50);
+  border: 1px solid var(--border-subtle);
+  border-bottom: none;
+  padding-top: 3.5mm !important;
+}
+.comp__plano--rec { background: var(--navy-900); border-color: var(--navy-900); color: #fff; }
+
+.comp__selo {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 6.2pt;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent-300);
+  margin-bottom: 1.6mm;
+}
+.comp__logo {
+  display: block;
+  height: 7mm;
+  max-width: 90%;
+  width: auto;
+  margin: 0 auto 1.6mm;
+  object-fit: contain;
+}
+/* A logo da operadora é colorida e some sobre o navy da coluna recomendada. */
+.comp__plano--rec .comp__logo { background: #fff; border-radius: 3px; padding: 1mm 1.6mm; }
+.comp__operadora {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 7pt;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--navy-500);
+  margin-bottom: 1mm;
+}
+.comp__plano--rec .comp__operadora { color: var(--navy-200); }
+.comp__nome {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 9.5pt;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+.comp__acom {
+  display: block;
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 7pt;
+  color: var(--text-tertiary);
+  margin-top: 0.8mm;
+}
+.comp__plano--rec .comp__acom { color: rgba(255, 255, 255, 0.6); }
+
+.comp tbody td { border-bottom: 1px solid var(--neutral-100); }
+.comp tbody td.comp--rec {
+  background: var(--navy-50);
+  border-left: 1px solid var(--navy-150);
+  border-right: 1px solid var(--navy-150);
+}
+.comp tbody tr:last-child td.comp--rec {
+  border-bottom: 1px solid var(--navy-150);
+  border-bottom-left-radius: var(--radius-md);
+  border-bottom-right-radius: var(--radius-md);
+}
+
+.comp__total td { padding-top: 2.8mm !important; padding-bottom: 2.8mm !important; }
+.comp__valor {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 12pt;
+  letter-spacing: -0.02em;
+  color: var(--navy-900);
+  font-variant-numeric: tabular-nums;
+  display: block;
+}
+.comp__tag {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 6pt;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--success-700);
+  background: var(--success-100);
+  border-radius: var(--radius-full);
+  padding: 0.6mm 2mm;
+  margin-top: 1.2mm;
+}
+.comp__attr td { font-size: 8pt; color: var(--text-secondary); }
+
+.comp__destaques td { padding-top: 3mm !important; padding-bottom: 2.4mm !important; }
+.comp__destaque {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 7.6pt;
+  line-height: 1.2;
+  color: var(--navy-900);
+  background: var(--navy-100);
+  border-radius: var(--radius-full);
+  padding: 1.4mm 3mm;
+}
+.comp--rec .comp__destaque { background: var(--navy-900); color: #fff; }
+.comp__attr .comp__rot { font-weight: 600; }
+
+/* --------------------------------------------- ponto forte da opção -- */
+
+.ponto-forte {
+  margin-top: auto;
+  background: var(--navy-900);
+  border-radius: var(--radius-xl);
+  padding: 5mm 6mm;
+  color: #fff;
+}
+.ponto-forte__selo {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 7.5pt;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent-300);
+  margin-bottom: 2mm;
+}
+.ponto-forte__t {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15pt;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin-bottom: 1.6mm;
+}
+.ponto-forte__d { font-size: 9pt; line-height: 1.45; color: rgba(255, 255, 255, 0.76); }
+
+/* ---------------------------------------------------- valor da Elih -- */
+
+.diferenciais { margin-top: auto; padding-top: 6mm; }
+.diferenciais__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3.5mm; }
+.diferencial {
+  border-top: 1.2mm solid var(--navy-900);
+  padding-top: 2.6mm;
+}
+.diferencial__t {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 9pt;
+  line-height: 1.2;
+  margin-bottom: 1.2mm;
+}
+.diferencial__d { font-size: 7.8pt; line-height: 1.42; color: var(--text-secondary); }
+
+/* --------------------------------------------------------- objeções -- */
+
+/* Duas colunas: as quebras de objeção são o núcleo persuasivo e precisam
+   caber inteiras na última página, ao lado dos próximos passos. */
+.objecoes { display: grid; grid-template-columns: 1fr 1fr; gap: 2.6mm; align-items: start; }
+.objecoes--unica { grid-template-columns: 1fr; }
+.objecao {
+  border: 1px solid var(--border-subtle);
+  border-left: 2.2mm solid var(--navy-900);
+  border-radius: var(--radius-md);
+  padding: 3mm 4mm;
+  background: var(--neutral-0);
+  box-shadow: var(--shadow-sm);
+}
+.objecao__q {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 9.5pt;
+  color: var(--navy-900);
+  margin-bottom: 1.6mm;
+  line-height: 1.25;
+}
+.objecao__a { font-size: 8.4pt; line-height: 1.45; color: var(--text-secondary); }
+
+/* ------------------------------------------------------ próximos passos -- */
+
+.passos { list-style: none; display: grid; gap: 2.4mm; counter-reset: passo; }
+.passo {
+  display: flex;
+  gap: 3.5mm;
+  align-items: flex-start;
+}
+.passo__num {
+  counter-increment: passo;
+  flex-shrink: 0;
+  width: 6.5mm;
+  height: 6.5mm;
+  border-radius: var(--radius-full);
+  background: var(--navy-900);
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 8.5pt;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.passo__num::before { content: counter(passo); }
+.passo__t {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 9.2pt;
+  line-height: 1.25;
+  margin-bottom: 0.8mm;
+}
+.passo__d { font-size: 7.9pt; line-height: 1.38; color: var(--text-secondary); }
+
+.docs {
+  background: var(--navy-950);
+  border-radius: var(--radius-lg);
+  padding: 3.6mm 4.2mm;
+  color: #fff;
+}
+.docs h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 10.5pt;
+  margin-bottom: 1mm;
+}
+.docs__contexto {
+  font-size: 8pt;
+  color: var(--accent-300);
+  font-weight: 600;
+  margin-bottom: 3.5mm;
+  line-height: 1.4;
+}
+.docs ul { list-style: none; display: grid; gap: 1.6mm; }
+.docs li {
+  position: relative;
+  padding-left: 5.5mm;
+  font-size: 8.4pt;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.82);
+}
+.docs li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 1mm;
+  width: 3.2mm;
+  height: 3.2mm;
+  border-radius: 1mm;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.destaque-carencia {
+  margin-top: 3mm;
+  background: var(--success-100);
+  border: 1px solid rgba(41, 142, 95, 0.2);
+  border-radius: var(--radius-md);
+  padding: 3.5mm 4.5mm;
+}
+.destaque-carencia h3 { color: var(--success-700); font-size: 9.5pt; margin-bottom: 1.2mm; }
+.destaque-carencia p { font-size: 8.4pt; line-height: 1.45; color: var(--neutral-700); }
+
+.cta {
+  margin-top: 3.5mm;
+  background: var(--navy-900);
+  border-radius: var(--radius-xl);
+  padding: 4mm 5mm;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6mm;
+  color: #fff;
+}
+.cta__t {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 12.5pt;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  margin-bottom: 1.5mm;
+}
+.cta__d { font-size: 8.6pt; color: rgba(255, 255, 255, 0.72); line-height: 1.45; }
+.cta__contato { text-align: right; flex-shrink: 0; }
+.cta__zap {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 14pt;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+.cta__mail { font-size: 8.4pt; color: var(--accent-300); margin-top: 1mm; }
+
+.disclaimer {
+  font-size: 6pt;
+  line-height: 1.4;
+  color: var(--text-tertiary);
+  margin-top: 3mm;
+  padding-top: 2.5mm;
+  border-top: 1px solid var(--border-subtle);
+  text-align: justify;
+}

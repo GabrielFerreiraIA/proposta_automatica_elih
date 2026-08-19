@@ -1,0 +1,31 @@
+<!-- @dsCard group="Components" viewport="700x260" name="Dark section (navy)" -->
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
+<div id="root" style="font-family:var(--font-body);background:#fff;"></div>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel">
+  const { DarkSection, DarkStatCard, SectionHeader } = window.ElihSeguros;
+  function Demo() {
+    return (
+      <div>
+        <div style={{height:60, display:'flex', alignItems:'center', justifyContent:'center', color:'var(--text-tertiary)', fontSize:12}}>seção clara anterior</div>
+        <DarkSection curveTop>
+          <SectionHeader
+            surface="dark"
+            align="center"
+            overline="Parceria com as maiores operadoras"
+            title="Acesso premium às melhores redes do Brasil."
+          />
+          <div style={{display:'flex', gap: 20, marginTop: 40, flexWrap:'wrap'}}>
+            <DarkStatCard value="100%" label="Independência comercial" description="Isenção analítica absoluta para o melhor custo-benefício." />
+            <DarkStatCard value="8 de 10" label="Parceria elite do país" description="Acesso de alto nível às maiores operadoras do mercado." />
+            <DarkStatCard value="SLA Direct" label="Suporte sem 0800" description="RH livre de centrais telefônicas." />
+          </div>
+        </DarkSection>
+      </div>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById('root')).render(<Demo />);
+</script>

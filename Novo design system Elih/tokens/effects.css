@@ -1,0 +1,58 @@
+/* Elih Seguros — Radius, shadow, spacing & motion tokens
+   Simplified from the old "metallic/glass" system: soft navy-tinted
+   shadows and rounded geometry (echoing the logo's circular mark)
+   replace the metallic edge borders and blueprint grid. */
+
+:root {
+  /* Radius — generous, rounded to match the friendly wordmark */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 28px;
+  --radius-full: 999px;
+
+  /* Spacing scale (4px base) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  --max-width: 80rem; /* 1280px content container */
+
+  /* Shadows — navy-tinted, soft, no color saturation */
+  --shadow-xs: 0 1px 2px rgba(1, 18, 70, 0.06);
+  --shadow-sm: 0 2px 8px rgba(1, 18, 70, 0.08);
+  --shadow-md: 0 8px 24px rgba(1, 18, 70, 0.10);
+  --shadow-lg: 0 16px 40px -8px rgba(1, 18, 70, 0.16);
+  --shadow-xl: 0 24px 60px -20px rgba(1, 18, 70, 0.22);
+  --shadow-dark-lg: 0 20px 50px -14px rgba(0, 0, 0, 0.45);
+
+  /* Focus */
+  --shadow-focus: 0 0 0 3px var(--accent-100), 0 0 0 1.5px var(--accent-500);
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 150ms;
+  --duration-base: 220ms;
+  --duration-slow: 400ms;
+}
+
+/* Utility: soft glass panel on dark surfaces only (kept, softened) */
+.glass-dark {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+  backdrop-filter: blur(20px) saturate(1.1);
+  -webkit-backdrop-filter: blur(20px) saturate(1.1);
+}
+
+.text-balance {
+  text-wrap: balance;
+}

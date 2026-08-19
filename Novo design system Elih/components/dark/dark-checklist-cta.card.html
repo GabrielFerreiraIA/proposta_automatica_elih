@@ -1,0 +1,34 @@
+<!-- @dsCard group="Components" viewport="700x460" name="Dark checklist + CTA card" -->
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
+<div id="root" style="font-family:var(--font-body);"></div>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel">
+  const { DarkSection, DarkChecklistItem, DarkCTACard, Button } = window.ElihSeguros;
+  function Demo() {
+    return (
+      <DarkSection>
+        <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap: 48, alignItems:'center'}}>
+          <div style={{display:'flex', flexDirection:'column', gap: 18}}>
+            <div className="overline overline--on-dark">O mapa estratégico de cuidado</div>
+            <h2 style={{fontFamily:'var(--font-display)', fontWeight:700, fontSize:'var(--text-2xl)', color:'#fff', margin:0, letterSpacing:'var(--tracking-tight)'}}>Proteção sem fronteiras.</h2>
+            <div style={{display:'flex', flexDirection:'column', gap: 14, marginTop: 8}}>
+              <DarkChecklistItem>Cobertura nacional</DarkChecklistItem>
+              <DarkChecklistItem>Gestão centralizada para filiais</DarkChecklistItem>
+              <DarkChecklistItem>Suporte consultivo ao RH</DarkChecklistItem>
+            </div>
+          </div>
+          <DarkCTACard
+            badge="Cotação simplificada"
+            title={<>Faça sua cotação simples — reduza em até <span style={{color:'var(--accent-300)'}}>30%</span> o valor do seu plano atual.</>}
+            description="São perguntas rápidas e diretas. Leva menos de um minuto."
+            action={<Button variant="primary" surface="dark">Começar cotação</Button>}
+          />
+        </div>
+      </DarkSection>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById('root')).render(<Demo />);
+</script>

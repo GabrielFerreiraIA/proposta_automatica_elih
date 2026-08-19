@@ -1,0 +1,34 @@
+<!-- @dsCard group="Components" viewport="700x480" name="Dark testimonial" -->
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
+<div id="root" style="font-family:var(--font-body);"></div>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel">
+  const { DarkSection, SectionHeader, DarkTestimonial } = window.ElihSeguros;
+  function Demo() {
+    return (
+      <DarkSection>
+        <SectionHeader
+          surface="dark"
+          overline="Quem já confia na Elih"
+          title="Consultoria de verdade, não só corretagem."
+        />
+        <div style={{display:'flex', gap: 20, marginTop: 36, flexWrap:'wrap'}}>
+          <DarkTestimonial
+            quote="Trocamos de operadora sem burocracia nenhuma — a Elih cuidou de tudo, do diagnóstico à implantação."
+            name="Márcia Duarte"
+            role="RH, Grupo Contabilis"
+          />
+          <DarkTestimonial
+            quote="Atendimento direto, sem 0800. Resolvemos uma inclusão emergencial em minutos pelo WhatsApp."
+            name="Renato Alves"
+            role="Associado SEESP"
+          />
+        </div>
+      </DarkSection>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById('root')).render(<Demo />);
+</script>

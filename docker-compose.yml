@@ -1,0 +1,19 @@
+services:
+  cotador:
+    build: .
+    container_name: cotador-elih
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      # Opcional: sem a chave, a copy usa o motor de regras e tudo funciona igual.
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ELIH_MODELO_IA: ${ELIH_MODELO_IA:-gpt-4o-mini}
+    volumes:
+      # Capa e logos de operadora ficam fora da imagem para você trocar
+      # sem precisar rebuildar.
+      - ./assets:/app/assets
+      - cotador-output:/app/output
+
+volumes:
+  cotador-output:

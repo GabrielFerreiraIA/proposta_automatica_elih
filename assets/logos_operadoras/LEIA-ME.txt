@@ -1,0 +1,12 @@
+Coloque aqui os logos das operadoras (.png, .jpg, .webp ou .svg).
+
+O nome do arquivo so precisa CONTER o nome da operadora. Todos funcionam:
+  bradesco.png
+  bradesco-saude-logo-1-1-1024x365.webp
+  9-sulamerica-saude-logo-0.png
+  amil-saude.png
+
+Prefira PNG com fundo transparente. Altura util no PDF: ~14 mm.
+Sem logo, a proposta usa um selo tipografico no padrao Elih.
+
+A pasta "Logos_Operadoras" na raiz do projeto tambem e lida.

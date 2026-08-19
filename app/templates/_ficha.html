@@ -1,0 +1,16 @@
+{# Consultor, contato e data. Aparece quando a capa é uma imagem fechada e não
+   comporta os dados dinâmicos. #}
+<div class="ficha">
+  <div>
+    <div class="ficha__rot">Preparada por</div>
+    <div class="ficha__val">{{ cot.vendedor_nome or 'Elih Seguros' }}</div>
+  </div>
+  <div>
+    <div class="ficha__rot">Contato</div>
+    <div class="ficha__val">{{ cot.vendedor_telefone or cot.vendedor_email or '' }}</div>
+  </div>
+  <div>
+    <div class="ficha__rot">Emitida em</div>
+    <div class="ficha__val">{{ data_emissao }}</div>
+  </div>
+</div>

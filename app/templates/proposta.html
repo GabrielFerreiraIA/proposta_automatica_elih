@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Proposta {{ cot.operadora }} — Elih Seguros</title>
+  <style>{{ css_inline | safe }}</style>
+</head>
+<body>
+
+{# ===================================================================== capa #}
+{# A capa personalizada é uma peça fechada, com logo e títulos próprios: ela   #}
+{# entra inteira, sem nenhuma sobreposição. Só a capa gerada pelo sistema      #}
+{# recebe os dados dinâmicos, porque foi desenhada com espaço para eles.       #}
+{% if capa_url %}
+<section class="page capa capa--imagem">
+  <img class="capa__bg" src="{{ capa_url }}" alt="">
+</section>
+{% else %}
+<section class="page capa">
+  <div class="capa__conteudo">
+    <img class="capa__marca-dagua" src="{{ logo_mark }}" alt="">
+    <img class="capa__logo" src="{{ logo_wordmark }}" alt="Elih Seguros">
+
+    <div>
+      <span class="capa__overline">Proposta personalizada · {{ cot.segmento or 'Saúde' }}</span>
+      <h1 class="capa__titulo">{{ titulo_capa }}</h1>
+      <p class="capa__sub">{{ subtitulo_capa }}</p>
+      <div class="capa__chips">
+        {% for b in planos[0].badges %}<span class="capa__chip">{{ b.label }}</span>{% endfor %}
+      </div>
+    </div>
+
+    <div class="capa__rodape">
+      <div>
+        <div class="capa__vendedor-cargo">Seu consultor</div>
+        <div class="capa__vendedor-nome">{{ cot.vendedor_nome or 'Elih Seguros' }}</div>
+        <div class="capa__contato">
+          {% if cot.vendedor_telefone %}{{ cot.vendedor_telefone }}<br>{% endif %}
+          {% if cot.vendedor_email %}{{ cot.vendedor_email }}<br>{% endif %}
+          {% if cot.vendedor_site %}{{ cot.vendedor_site | replace('http://', '') | replace('https://', '') }}{% endif %}
+        </div>
+      </div>
+      <div class="capa__data">
+        Emitida em {{ data_emissao }}<br>
+        {% if cot.referencia %}Tabela de referência {{ cot.referencia }}{% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{# ============================================================== comparativo #}
+{% if comparativo %}
+<section class="page">
+  {% include "_topo.html" %}
+  {% if capa_url %}{% include "_ficha.html" %}{% endif %}
+
+  <div class="bloco">
+    <span class="overline">Comparativo · {{ comparativo.colunas | length }} opções</span>
+    <h1 class="titulo">As opções lado a lado</h1>
+  </div>
+
+  <div class="comp-wrap">
+    <table class="comp">
+      <thead>
+        <tr>
+          <th class="comp__rot"></th>
+          {% for c in comparativo.colunas %}
+          <th class="comp__plano {{ 'comp__plano--rec' if c.recomendado }}">
+            {% if c.recomendado %}<span class="comp__selo">Recomendado</span>{% endif %}
+            {% if c.logo %}<img class="comp__logo" src="{{ c.logo }}" alt="{{ c.operadora }}">
+            {% else %}<span class="comp__operadora">{{ c.operadora }}</span>{% endif %}
+            <span class="comp__nome">{{ c.plano }}</span>
+            <span class="comp__acom">{{ c.acomodacao }}</span>
+          </th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {# O ponto forte de cada opção: o cliente enxerga o que cada uma entrega
+           de melhor, em vez de comparar só pelo preço. #}
+        <tr class="comp__destaques">
+          <td class="comp__rot">Ponto forte</td>
+          {% for c in comparativo.colunas %}
+          <td class="{{ 'comp--rec' if c.recomendado }}">
+            <span class="comp__destaque">{{ c.destaque }}</span>
+          </td>
+          {% endfor %}
+        </tr>
+        <tr class="comp__total">
+          <td class="comp__rot">Total mensal do grupo</td>
+          {% for c in comparativo.colunas %}
+          <td class="{{ 'comp--rec' if c.recomendado }}">
+            <span class="comp__valor">{{ c.total or '—' }}</span>
+            {% if c.mais_barato %}<span class="comp__tag">menor valor</span>{% endif %}
+          </td>
+          {% endfor %}
+        </tr>
+        {% for f in comparativo.faixas %}
+        <tr>
+          <td class="comp__rot">{{ f }} anos</td>
+          {% for c in comparativo.colunas %}
+          <td class="{{ 'comp--rec' if c.recomendado }}">{{ c.faixas[f] }}</td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+        {% for a in comparativo.atributos %}
+        <tr class="comp__attr">
+          <td class="comp__rot">{{ a }}</td>
+          {% for c in comparativo.colunas %}
+          <td class="{{ 'comp--rec' if c.recomendado }}">{{ c.atributos[a] }}</td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+        <tr class="comp__attr">
+          <td class="comp__rot">Hospitais em {{ rede.regiao | title }}</td>
+          {% for c in comparativo.colunas %}
+          <td class="{{ 'comp--rec' if c.recomendado }}">{{ c.hospitais }}</td>
+          {% endfor %}
+        </tr>
+        <tr class="comp__attr">
+          <td class="comp__rot">Laboratórios em {{ rede.regiao | title }}</td>
+          {% for c in comparativo.colunas %}
+          <td class="{{ 'comp--rec' if c.recomendado }}">{{ c.laboratorios }}</td>
+          {% endfor %}
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  {% if comparativo.leitura %}
+  <div class="bloco resumo" style="margin-top:5mm">
+    <h2 class="secao">Como ler esta tabela</h2>
+    <ul>{% for l in comparativo.leitura %}<li>{{ l }}</li>{% endfor %}</ul>
+  </div>
+  {% endif %}
+
+  <p class="nota">
+    Nas próximas páginas, cada opção tem o seu descritivo completo — valores, rede
+    credenciada e reembolso. Tudo reproduzido da cotação oficial de cada operadora,
+    sem alteração.
+  </p>
+
+  {% include "_rodape.html" %}
+</section>
+{% endif %}
+
+{# ============================================ um descritivo por plano cotado #}
+{% for p in planos %}
+
+{# ------------------------------------------------- plano: valores e resumo #}
+<section class="page">
+  {% include "_topo.html" %}
+  {% if capa_url and not comparativo %}{% include "_ficha.html" %}{% endif %}
+
+  <div class="bloco">
+    <span class="overline">
+      {% if comparativo %}Opção {{ loop.index }} de {{ planos | length }}
+      {% else %}O plano cotado{% endif %}
+    </span>
+    <div class="plano-head">
+      {% if p.logo %}
+        <img class="operadora-logo" src="{{ p.logo }}" alt="{{ p.cot.operadora }}">
+      {% else %}
+        <div class="operadora-badge"><span>Operadora</span>{{ p.cot.operadora }}</div>
+      {% endif %}
+      <div>
+        <h1 class="titulo">{{ p.coluna.plano }}</h1>
+        <div class="badges">
+          {% for b in p.badges %}<span class="badge badge--{{ b.tipo }}">{{ b.label }}</span>{% endfor %}
+          {% if p.coluna.acomodacao %}
+            <span class="badge">Acomodação: {{ p.coluna.acomodacao }}</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bloco resumo">
+    <h2 class="secao">O que você está contratando</h2>
+    <ul>{% for l in p.resumo %}<li>{{ l }}</li>{% endfor %}</ul>
+  </div>
+
+  <div class="bloco">
+    <h2 class="secao">Valores por faixa etária</h2>
+    <div class="card-valores">
+      <table class="tabela">
+        <thead>
+          <tr>
+            <th>Faixa etária</th>
+            {% if p.tem_vidas %}<th>Vidas</th>{% endif %}
+            <th>Valor mensal</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in p.linhas_idade %}
+          <tr>
+            <td class="faixa">{{ r.faixa }} anos</td>
+            {% if p.tem_vidas %}<td>{{ r.vidas or '—' }}</td>{% endif %}
+            <td class="valor">{{ r.valor }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      {% if p.coluna.total %}
+      <div class="total">
+        <div class="total__rotulo">
+          Total mensal do grupo
+          <span>{{ p.vidas_total }} {{ 'vida' if p.vidas_total == '1' else 'vidas' }} · acomodação {{ p.coluna.acomodacao }}</span>
+        </div>
+        <div class="total__valor">{{ p.coluna.total }}<small>/mês</small></div>
+      </div>
+      {% endif %}
+
+      <p class="nota">
+        {% if p.coluna.tx_iof %}Taxa de inscrição: {{ p.coluna.tx_iof }}.{% endif %}
+        {% if p.cot.referencia %} Tabela de referência {{ p.cot.referencia }}.{% endif %}
+        {% if p.vigencia %} Condições válidas {{ p.vigencia.lower() }}.{% endif %}
+        Valores extraídos integralmente da cotação oficial da operadora.
+      </p>
+    </div>
+  </div>
+
+  {% if p.mostrar_per_capita %}
+  <div class="bloco">
+    <h2 class="secao">Tabela per capita</h2>
+    <table class="tabela tabela--compacta">
+      <thead><tr><th>Faixa etária</th><th>Valor por vida</th></tr></thead>
+      <tbody>
+        {% for r in p.coluna.per_capita %}
+        <tr><td class="faixa">{{ r.faixa }} anos</td><td class="valor">{{ r.valor }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  {% if comparativo and p.destaque %}
+  <div class="ponto-forte">
+    <div class="ponto-forte__selo">Ponto forte desta opção</div>
+    <div class="ponto-forte__t">{{ p.destaque }}</div>
+    <div class="ponto-forte__d">
+      {{ p.destaque_desc | capitalize }}{% if p.recomendado %} — é a opção que eu recomendo
+      para o seu perfil{% endif %}.
+    </div>
+  </div>
+  {% endif %}
+
+  {% if mostrar_diferenciais and not comparativo %}
+  <div class="diferenciais">
+    <span class="overline">Por que fechar com a Elih</span>
+    <div class="diferenciais__grid">
+      {% for d in copy.diferenciais %}
+      <div class="diferencial">
+        <div class="diferencial__t">{{ d.titulo }}</div>
+        <div class="diferencial__d">{{ d.texto }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% include "_rodape.html" %}
+</section>
+
+{# --------------------------------------- plano: rede credenciada e reembolso #}
+<section class="page">
+  {% include "_topo.html" %}
+
+  <div class="bloco">
+    <span class="overline">
+      {{ p.cot.operadora }} {{ p.coluna.plano }} · rede em {{ p.rede.regiao }}
+    </span>
+    <h1 class="titulo">Onde você vai ser atendido</h1>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat__num">{{ p.rede.total_hospitais }}</div>
+      <div class="stat__rot">hospitais credenciados na região</div>
+    </div>
+    <div class="stat">
+      <div class="stat__num">{{ p.rede.total_laboratorios }}</div>
+      <div class="stat__rot">laboratórios e centros de diagnóstico</div>
+    </div>
+    <div class="stat">
+      <div class="stat__num">{{ p.rede.cidades | length }}</div>
+      <div class="stat__rot">{{ 'zonas atendidas' if p.rede.regiao == 'SÃO PAULO' else 'cidades atendidas' }}</div>
+    </div>
+  </div>
+
+  <div class="bloco grid-2 grid-2--assimetrica">
+    <div>
+      <h2 class="secao">Principais hospitais</h2>
+      <ul class="rede-lista">
+        {% for h in p.rede.hospitais %}
+        <li><span class="nome">{{ h.nome }}</span><span class="cidade">{{ h.cidade }}</span></li>
+        {% endfor %}
+      </ul>
+      {% if p.rede.total_hospitais > p.rede.hospitais | length %}
+      <p class="legenda-tipos">
+        + {{ p.rede.total_hospitais - p.rede.hospitais | length }} outros hospitais credenciados
+        na região. Lista completa no guia médico da operadora.
+      </p>
+      {% endif %}
+    </div>
+    <div>
+      <h2 class="secao">Laboratórios e diagnóstico</h2>
+      <ul class="rede-lista">
+        {% for l in p.rede.laboratorios %}
+        <li><span class="nome">{{ l.nome }}</span><span class="cidade">{{ l.cidade }}</span></li>
+        {% endfor %}
+      </ul>
+      {% if p.rede.total_laboratorios > p.rede.laboratorios | length %}
+      <p class="legenda-tipos">
+        + {{ p.rede.total_laboratorios - p.rede.laboratorios | length }} outras unidades credenciadas.
+      </p>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if p.rede.cidades %}
+  <p class="legenda-tipos">
+    <strong>{{ 'Zonas' if p.rede.regiao == 'SÃO PAULO' else 'Cidades' }} cobertas nesta região:</strong>
+    {{ p.cidades_exibidas | join(' · ') }}{% if p.cidades_restantes %} · e mais {{ p.cidades_restantes }} cidades{% endif %}
+  </p>
+  {% endif %}
+
+  {% if p.cot.tem_reembolso and p.reembolsos_exibidos %}
+  <div class="bloco" style="margin-top:6mm">
+    <h2 class="secao">Reembolso — livre escolha de médico</h2>
+    <table class="tabela tabela--compacta">
+      <thead>
+        <tr>
+          <th>Procedimento</th>
+          {% for c in p.cot.reembolso_colunas %}<th>{{ c }}</th>{% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in p.reembolsos_exibidos %}
+        <tr>
+          <td>{{ r.procedimento }}</td>
+          {% for v in r.valores %}<td class="valor">{{ v }}</td>{% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p class="nota">
+      Valores de reembolso conforme tabela oficial da operadora, reproduzidos sem alteração.
+      {% if p.cot.reembolsos | length > p.reembolsos_exibidos | length %}
+      Tabela completa com {{ p.cot.reembolsos | length }} procedimentos disponível sob solicitação.
+      {% endif %}
+    </p>
+  </div>
+  {% endif %}
+
+  {% include "_rodape.html" %}
+</section>
+{% endfor %}
+
+{# =============================================================== fechamento #}
+<section class="page">
+  {% include "_topo.html" %}
+
+  <div class="bloco">
+    <span class="overline">Dúvidas que sempre aparecem</span>
+    <h1 class="titulo">Respondendo antes de você perguntar</h1>
+  </div>
+
+  <div class="bloco objecoes{{ ' objecoes--unica' if copy.objecoes | length < 3 }}">
+    {% for o in copy.objecoes %}
+    <div class="objecao">
+      <div class="objecao__q">{{ o.objecao }}</div>
+      <div class="objecao__a">{{ o.resposta }}</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="bloco grid-2">
+    <div>
+      <h2 class="secao">Próximos passos</h2>
+      <ul class="passos">
+        {% for passo in copy.proximos_passos.passos %}
+        <li class="passo">
+          <div class="passo__num"></div>
+          <div>
+            <div class="passo__t">{{ passo.titulo }}</div>
+            <div class="passo__d">{{ passo.texto }}</div>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div>
+      <div class="docs">
+        <h3>Documentos necessários</h3>
+        <div class="docs__contexto">
+          {% if ctx.possui_plano %}Você já tem plano ativo — inclui o que é preciso para o aproveitamento de carência.
+          {% else %}Você ainda não tem plano de saúde.{% endif %}
+        </div>
+        <ul>{% for d in copy.proximos_passos.documentos %}<li>{{ d }}</li>{% endfor %}</ul>
+      </div>
+
+      {% if copy.proximos_passos.aproveitamento_carencia %}
+      <div class="destaque-carencia">
+        <h3>Aproveitamento de carência</h3>
+        <p>
+          Com a carta de permanência e as carteirinhas do plano atual, o tempo de carência
+          já cumprido é aproveitado na migração. Eu solicito e acompanho esse processo
+          junto à operadora.
+        </p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="cta">
+    <div>
+      <div class="cta__t">Vamos garantir estas condições?</div>
+      <div class="cta__d">
+        Me chame no WhatsApp com a sua decisão ou com qualquer dúvida.
+        {% if vigencia %} Esta tabela é válida {{ vigencia.lower() }}.{% endif %}
+      </div>
+    </div>
+    <div class="cta__contato">
+      <div class="cta__zap">{{ cot.vendedor_telefone or '' }}</div>
+      <div class="cta__mail">{{ cot.vendedor_email or '' }}</div>
+    </div>
+  </div>
+
+  {% if cot.disclaimer %}
+  <p class="disclaimer">{{ cot.disclaimer | join(' ') }}</p>
+  {% endif %}
+
+  {% include "_rodape.html" %}
+</section>
+
+</body>
+</html>

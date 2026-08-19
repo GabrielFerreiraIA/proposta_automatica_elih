@@ -1,0 +1,35 @@
+<!-- @dsCard group="Components" viewport="700x420" name="Plan card" -->
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
+<div id="root" style="padding:24px;background:var(--bg-section);font-family:var(--font-body);"></div>
+<script src="../../_ds_bundle.js"></script>
+<script type="text/babel">
+  const { PlanCard } = window.ElihSeguros;
+  function Demo() {
+    return (
+      <div style={{display:'flex', gap: 20, flexWrap:'wrap'}}>
+        <PlanCard
+          category="Plano de Saúde"
+          tag="MAIS ESCOLHIDO"
+          title="São Cristóvão Saúde"
+          description="Quatro categorias — Essencial, Conforto, Bem-estar e Select — com rede própria e credenciada."
+          features={["Rede própria e credenciada", "Referência em saúde e bem-estar", "Tradição, excelência e humanização"]}
+          price="R$ 232,81/mês"
+          priceNote="Categoria Essencial (adesão)"
+        />
+        <PlanCard
+          category="Odontológico"
+          title="DentalPar Master I"
+          description="Plano odontológico Master I completo: emergência 24h, ortodontia, endodontia e mais."
+          features={["Emergência e Urgências 24h", "Ortodontia e Endodontia inclusas", "9 frentes de cobertura"]}
+          priceLabel="a partir de"
+          price="3× R$ 140"
+          priceNote="no cartão"
+        />
+      </div>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById('root')).render(<Demo />);
+</script>

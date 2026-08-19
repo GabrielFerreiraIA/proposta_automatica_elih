@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#011246">
+  <title>Cotador-Elih</title>
+  <meta name="description" content="Gerador de propostas de plano de saúde da Elih Seguros.">
+  <link rel="manifest" href="/static/manifest.webmanifest">
+  <link rel="icon" href="/static/img/favicon.png">
+  <link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Cotador-Elih">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body>
+
+<header class="topo">
+  <img src="/static/img/icone-192.png" alt="" class="topo__mark">
+  <div class="topo__texto">
+    <div class="topo__nome">Cotador-Elih</div>
+    <div class="topo__sub">Propostas de plano de saúde</div>
+  </div>
+  <button type="button" class="btn-instalar oculto" id="btn-instalar" title="Instalar o app">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+      <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+    </svg>
+    Instalar
+  </button>
+</header>
+
+<div class="instalar-ios oculto" id="instalar-ios">
+  <button type="button" class="instalar-ios__x" id="fechar-ios" aria-label="Fechar">×</button>
+  <strong>Adicionar à tela de início</strong>
+  <span>Toque em <b>Compartilhar</b> na barra do Safari e escolha
+  <b>“Adicionar à Tela de Início”</b>.</span>
+</div>
+
+<main class="wrap">
+
+  <!-- ETAPA 1 ---------------------------------------------------------- -->
+  <section class="etapa" id="etapa-upload">
+    <span class="overline">Etapa 1</span>
+    <h1>Envie as cotações</h1>
+    <p class="lead">
+      Um PDF por operadora, até 5. Eu leio todos e monto uma proposta única, com o
+      comparativo entre elas.
+    </p>
+
+    <label class="drop" id="drop">
+      <input type="file" id="arquivo" accept="application/pdf,.pdf" multiple hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"
+           stroke-linecap="round" stroke-linejoin="round" class="drop__icone">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+      <span class="drop__t" id="drop-titulo">Toque para escolher os PDFs</span>
+      <span class="drop__d" id="drop-desc">ou arraste os arquivos aqui · até 5</span>
+    </label>
+
+    <ul class="lista-arquivos" id="lista-arquivos"></ul>
+    <button type="button" class="btn btn--secundario oculto" id="btn-analisar">
+      Analisar <span id="qtd-arquivos"></span> →
+    </button>
+
+    <div class="avisos">
+      {% if not tem_capa %}
+      <div class="aviso aviso--atencao">
+        <strong>Capa padrão em uso.</strong>
+        Coloque sua imagem em <code>assets/capa/capa.png</code> para usá-la como capa.
+      </div>
+      {% endif %}
+      {% if not logos_operadoras %}
+      <div class="aviso aviso--atencao">
+        <strong>Sem logos de operadora.</strong>
+        Coloque os PNGs em <code>assets/logos_operadoras/</code> (ex.: <code>bradesco.png</code>,
+        <code>sulamerica.png</code>). Até lá, uso um selo tipográfico.
+      </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- ETAPA 2 ---------------------------------------------------------- -->
+  <section class="etapa oculto" id="etapa-config">
+    <span class="overline">Etapa 2</span>
+    <h1>Confirme os dados</h1>
+    <p class="lead" id="resumo-leitura"></p>
+
+    <div class="campo" id="campo-plano">
+      <label class="rotulo">Quais planos entram na proposta?</label>
+      <p class="ajuda" id="ajuda-plano">
+        O primeiro que você marcar é o recomendado. Marque 2 a 4 para gerar a
+        página de comparação lado a lado.
+      </p>
+      <div class="opcoes opcoes--empilhadas" id="planos"></div>
+    </div>
+
+    <div class="campo">
+      <label class="rotulo">Onde o cliente vai usar o plano?</label>
+      <div class="opcoes" id="regioes"></div>
+    </div>
+
+    <div class="campo" id="campo-cidades" hidden>
+      <label class="rotulo">
+        Cidades ou zonas específicas <span class="opcional">opcional</span>
+      </label>
+      <p class="ajuda">Sem seleção, a proposta mostra a região inteira.</p>
+      <div class="opcoes opcoes--densas" id="cidades"></div>
+    </div>
+
+    <div class="campo">
+      <label class="rotulo">O cliente já tem plano de saúde ativo?</label>
+      <div class="opcoes">
+        <button type="button" class="chip" data-grupo="possui_plano" data-valor="sim">
+          Sim — aproveitar carência
+        </button>
+        <button type="button" class="chip ativo" data-grupo="possui_plano" data-valor="nao">
+          Não tem plano
+        </button>
+      </div>
+    </div>
+
+    <div class="campo">
+      <label class="rotulo">Tipo de CNPJ</label>
+      <div class="opcoes">
+        <button type="button" class="chip ativo" data-grupo="tipo_cnpj" data-valor="">Não se aplica</button>
+        <button type="button" class="chip" data-grupo="tipo_cnpj" data-valor="mei">MEI</button>
+        <button type="button" class="chip" data-grupo="tipo_cnpj" data-valor="ltda">Limitada</button>
+      </div>
+    </div>
+
+    <div class="campo oculto" id="campo-atributos">
+      <label class="rotulo">
+        Complete o que falta <span class="obrigatorio">não declarado no PDF</span>
+      </label>
+      <p class="ajuda">
+        Não achei essas informações escritas na cotação. Confirme para eu não supor —
+        elas aparecem na proposta e no comparativo.
+      </p>
+      <div id="atributos"></div>
+    </div>
+
+    {% if tem_ia %}
+    <div class="campo">
+      <label class="rotulo">Refinar a copy com IA</label>
+      <div class="opcoes">
+        <button type="button" class="chip ativo" data-grupo="usar_ia" data-valor="sim">Sim</button>
+        <button type="button" class="chip" data-grupo="usar_ia" data-valor="nao">Não</button>
+      </div>
+      <p class="ajuda">
+        A IA só reescreve o texto no tom da marca. Valores, rede e coberturas continuam
+        vindo do PDF — a saída é validada e recusada se inventar qualquer número.
+      </p>
+    </div>
+    {% endif %}
+
+    <div class="acoes">
+      <button type="button" class="btn btn--primario" id="btn-gerar">Gerar proposta →</button>
+      <button type="button" class="btn btn--texto" id="btn-voltar">Trocar PDF</button>
+    </div>
+  </section>
+
+  <!-- ETAPA 3 ---------------------------------------------------------- -->
+  <section class="etapa oculto" id="etapa-pronto">
+    <span class="overline">Pronto</span>
+    <h1>Sua proposta está pronta</h1>
+    <div class="stats" id="stats-final"></div>
+    <div class="acoes">
+      <a class="btn btn--primario" id="link-download" download>Baixar PDF ↓</a>
+      <button type="button" class="btn btn--secundario" id="btn-ajustar">Ajustar e gerar de novo</button>
+      <button type="button" class="btn btn--texto" id="btn-novo">Nova proposta</button>
+    </div>
+  </section>
+
+  <div class="erro oculto" id="erro"></div>
+</main>
+
+<div class="carregando oculto" id="carregando">
+  <div class="carregando__caixa">
+    <div class="spinner"></div>
+    <div class="carregando__t" id="carregando-t">Lendo o PDF…</div>
+    <div class="carregando__d" id="carregando-d">Extraindo valores, rede credenciada e reembolso</div>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+Coloque aqui a imagem da capa personalizada.
+
+- Nome recomendado: capa.png (aceita .png, .jpg, .jpeg, .webp)
+- Proporcao ideal: A4 retrato (210 x 297 mm) — por exemplo 2480 x 3508 px
+- A imagem vira o fundo de pagina inteira. A aplicacao aplica um veu navy por
+  cima para o texto branco ficar legivel, entao nao precisa deixar area vazia.
+- Sem arquivo aqui, a capa e gerada no navy #011246 da marca.
