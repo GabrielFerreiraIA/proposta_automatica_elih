@@ -102,9 +102,33 @@ selos e dados do consultor.
 ### Logos das operadoras
 
 Coloque os arquivos em **`assets/logos_operadoras/`** (a pasta `Logos_Operadoras/`
-na raiz também é lida). O nome do arquivo só precisa conter o nome da operadora:
+na raiz também é lida). O nome só precisa **conter** o nome da operadora:
 `bradesco-saude-logo.webp`, `9-sulamerica-saude-logo-0.png` e `sulamerica.png`
-funcionam igual. Sem logo, entra um selo tipográfico no padrão Elih.
+funcionam igual — acento, maiúscula e hífen são normalizados. Sem logo, entra um
+selo tipográfico no padrão Elih.
+
+Depois de largar os arquivos, rode o verificador:
+
+```bash
+python scripts/checar_logos.py
+```
+
+Ele confere formato, proporção, transparência, peso e se o nome casa com alguma
+operadora conhecida, e lista quais ainda estão sem logo.
+
+**Especificação**
+
+| | |
+|---|---|
+| Formato | SVG (ideal) → PNG transparente → WebP. JPG só se não houver outro |
+| Proporção | horizontal, perto de **2,8:1** — o slot é 40 × 14 mm |
+| Resolução (raster) | 400–600 px de altura; mínimo 165 px |
+| Peso | até ~300 KB (cada logo vira base64 dentro do PDF) |
+| Margem interna | mínima, e **igual em todas** — o encaixe é `object-fit: contain`, então respiro dentro do arquivo encolhe a logo visível |
+
+**Em SVG, converta todo o texto em curvas.** Um `<text>` que referencia a fonte da
+marca renderiza com uma fonte qualquer do sistema no servidor — sai errado e sem
+erro nenhum. O verificador trata isso como erro grave.
 
 ### Textos
 
@@ -156,43 +180,68 @@ a carga real e produzem texto equivalente; troque por `ELIH_MODELO_IA`:
 
 ---
 
-## Deploy com Docker / Easypanel
+## Deploy no Easypanel (VPS, via GitHub)
+
+O repositório já está pronto para build por Dockerfile. Localmente:
 
 ```bash
 docker compose up -d --build
 ```
 
-No **Easypanel**:
+### Passo a passo no Easypanel
 
-1. Crie um serviço **App** apontando para o repositório do GitHub.
-2. Build: **Dockerfile** (o da raiz).
-3. Porta interna: **8000**.
-4. Variável de ambiente `OPENAI_API_KEY` (opcional).
-5. Monte um volume em **`/app/assets`** para trocar capa e logos sem rebuildar.
+1. **Suba o código**
 
-A imagem base é a oficial do Playwright, que já traz Chromium e as bibliotecas de
-sistema para renderização — não é preciso instalar fontes ou dependências extras.
+   ```bash
+   git add -A
+   git commit -m "Cotador-Elih pronto para deploy"
+   git push origin main
+   ```
 
----
+2. **Crie o serviço** — *+ Service → App*, conectado ao repositório
+   `proposta_automatica_elih`, branch `main`.
 
-## PWA — instalar no celular
+3. **Build:** selecione **Dockerfile** (o da raiz). Não precisa de build args.
 
-O app é instalável com o nome **Cotador-Elih** e o ícone próprio.
+4. **Porta:** interna **8000**. O container respeita a variável `PORT` se o
+   Easypanel injetar outra.
 
-- **Android / Chrome / Edge:** aparece o botão **Instalar** no cabeçalho.
-- **iPhone / Safari:** o iOS não permite instalação automática. Um aviso explica o
-  caminho: **Compartilhar → Adicionar à Tela de Início**.
+5. **Variáveis de ambiente** (aba *Environment*):
 
-Instalado, abre em tela cheia, sem barra de navegador. O service worker guarda só
-a casca da interface — upload, análise e geração sempre vão ao servidor.
+   | Variável | Valor |
+   |---|---|
+   | `OPENAI_API_KEY` | sua chave |
+   | `ELIH_MODELO_IA` | `gpt-4o-mini` |
 
-Para a instalação funcionar o site precisa ser servido por **HTTPS** (ou
-`localhost`). No Easypanel, basta ativar o certificado do domínio.
+   Sem a chave o app funciona igual, só com a copy de regras. **Nunca commite o
+   `.env`** — ele está no `.gitignore` de propósito; a chave vive só aqui.
 
-Os ícones são gerados a partir de `Logo PWA APP/`. Para trocar, substitua a
-imagem e rode de novo o trecho de geração de ícones descrito em `app/static/img/`.
+6. **Volume** (aba *Mounts*): monte um volume em **`/app/assets`**. É o que
+   permite trocar a capa e as logos direto no servidor, sem rebuildar a imagem.
+   Na primeira subida, copie o conteúdo de `assets/` para dentro do volume.
 
----
+7. **Domínio e HTTPS:** ative o certificado. Isso não é cosmético — o
+   **PWA só instala em HTTPS**. Sem certificado, o app abre normalmente no
+   navegador mas o botão "Instalar" não aparece.
+
+8. **Health check:** já vem no Dockerfile, batendo em `/api/saude`.
+
+### Verificações depois de subir
+
+```bash
+curl https://SEU-DOMINIO/api/saude
+# {"ok":true,"ia":true,"modelo":"gpt-4o-mini"}
+```
+
+- `"ia": false` significa que a `OPENAI_API_KEY` não chegou no container.
+- A tela inicial avisa se a capa ou as logos não forem encontradas.
+
+### Sobre o tamanho da imagem
+
+O Dockerfile copia só `app/` e `assets/`. As pastas de material de origem
+(`PDF Bruto`, `Novo design system Elih`, `Logo PWA APP`) ficam de fora pelo
+`.dockerignore` — elas existem no repositório como referência, não são usadas em
+produção.
 
 ## Estrutura
 
@@ -208,6 +257,8 @@ app/
                    css/app.css (web), app.js, sw.js, manifest.webmanifest, ícones
 scripts/
   gerar_fontes.py  regenera css/fontes.css (só quando trocar de fonte)
+  checar_logos.py  valida as logos das operadoras
+  testar_logos.py  gera output/teste-logos.pdf com as logos nas 3 posições reais
 assets/
   capa/                 sua capa personalizada
   logos_operadoras/     logos das operadoras

@@ -288,13 +288,28 @@ def _parse_cabecalho(cot: Cotacao, bloco: list[Linha], globais: list[Linha]) -> 
             cot.chips = [c for c in _chips(l.raw) if c]
 
 
+# Nomes usados para (a) identificar a operadora no título do PDF e (b) casar o
+# arquivo de logo. Grafias alternativas entram de propósito: as operadoras se
+# escrevem de formas diferentes no material, e o nome do arquivo de logo nem
+# sempre segue a grafia oficial (ex.: "Transmontano" por "Trasmontano").
 OPERADORAS = [
-    "Amil", "Bradesco", "SulAmérica", "Sulamerica", "Porto Seguro", "Notredame",
-    "NotreDame Intermédica", "Hapvida", "Unimed", "Omint", "Care Plus", "Alice",
-    "Ameplan", "Blue Med", "São Cristóvão", "Trasmontano", "Prevent Senior",
-    "Seguros Unimed", "Classes Laboriosas", "Santa Helena", "Biovida", "GreenLine",
-    "Medsênior", "MedSenior", "Salutar", "Vision Med", "Qsaúde", "QSaúde",
+    "Amil", "Amil Black", "Bradesco", "Bradesco Saúde",
+    "SulAmérica", "Sulamerica", "SulAmérica Saúde",
+    "Porto Seguro", "Porto Saúde",
+    "Notredame", "NotreDame Intermédica", "Hapvida",
+    "Unimed", "Seguros Unimed", "Unimed Seguros", "Unimed Nacional",
+    "Omint", "Omint Saúde", "Care Plus", "Alice", "Ameplan",
+    "Blue Med", "BlueMed", "São Cristóvão", "Sao Cristovao",
+    "Trasmontano", "Transmontano",
+    "Prevent Senior", "Classes Laboriosas", "Santa Helena",
+    "Biovida", "Biovida Saúde", "GreenLine",
+    "Medsênior", "MedSenior", "Salutar", "Vision Med",
+    "Qsaúde", "QSaúde", "Select", "Select Operadora Saúde",
+    "Plena", "Plena Saúde", "Sami", "Santa Rosa", "Elite Med",
+    "São Miguel", "Sao Miguel", "São Miguel Saúde",
+    "Unihosp", "Unihosp Saúde",
 ]
+
 
 
 def _detecta_operadora(titulo: str) -> str | None:

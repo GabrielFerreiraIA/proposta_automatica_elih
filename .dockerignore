@@ -8,3 +8,9 @@ PDF Bruto
 Novo design system Elih
 Novas Logo Elih
 .env
+
+# Material de origem: nao entra na imagem (o app usa app/static e assets)
+Logo PWA APP
+scripts
+iniciar.bat
+README.md

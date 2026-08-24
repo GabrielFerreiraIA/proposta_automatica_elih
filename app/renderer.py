@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import base64
 import datetime as dt
+from difflib import SequenceMatcher
 import mimetypes
 import re
 import unicodedata
@@ -81,14 +82,26 @@ def _slug(s: str) -> str:
 
 
 def _imagens(pastas: list[Path], extras: set[str] | None = None) -> list[Path]:
+    """
+    Imagens das pastas, sem repetir. O Windows não diferencia maiúsculas em
+    caminho, então "Logos_Operadoras" e "logos_operadoras" são a mesma pasta e
+    sem a deduplicação cada arquivo apareceria duas vezes.
+    """
     exts = IMAGENS | (extras or set())
-    return [
-        arq
-        for pasta in pastas
-        if pasta.exists()
-        for arq in sorted(pasta.iterdir())
-        if arq.is_file() and arq.suffix.lower() in exts
-    ]
+    vistos: set[Path] = set()
+    achados: list[Path] = []
+    for pasta in pastas:
+        if not pasta.exists():
+            continue
+        for arq in sorted(pasta.iterdir()):
+            if not arq.is_file() or arq.suffix.lower() not in exts:
+                continue
+            chave = arq.resolve()
+            if chave in vistos:
+                continue
+            vistos.add(chave)
+            achados.append(arq)
+    return achados
 
 
 def encontra_capa() -> Path | None:
@@ -98,19 +111,67 @@ def encontra_capa() -> Path | None:
     return (preferidos or candidatos or [None])[0]
 
 
+# Palavras que aparecem no nome de quase toda operadora e não ajudam a
+# distinguir uma da outra.
+GENERICAS = {"saude", "operadora", "plano", "planos", "logo", "seguro", "s", "sa"}
+
+
+def _tokens(texto: str) -> set[str]:
+    """Palavras significativas do nome, normalizadas."""
+    brutas = re.split(r"[^a-z0-9]+", _slug(texto).replace("-", " "))
+    return {t for t in brutas if t and t not in GENERICAS and not t.isdigit()}
+
+
+def _pontua(operadora: str, arquivo: str) -> float:
+    """
+    Quão bem o nome do arquivo representa esta operadora (0 = não representa).
+
+    Precisa ser tolerante porque o nome do arquivo raramente segue a grafia
+    oficial: vem com a ordem invertida ("Unimed_seguros" para "Seguros Unimed"),
+    com palavra genérica a mais ("Select_Operadora_Saúde") ou com a grafia
+    trocada ("Transmontano" por "Trasmontano").
+    """
+    alvo, nome = _slug(operadora).replace("-", ""), _slug(arquivo).replace("-", "")
+    if not alvo or not nome:
+        return 0.0
+    if alvo == nome:
+        return 100.0
+
+    t_alvo, t_nome = _tokens(operadora), _tokens(arquivo)
+    if t_alvo and t_alvo == t_nome:
+        return 90.0
+    if t_alvo and t_alvo <= t_nome:
+        # Todas as palavras da operadora estão no arquivo. Quanto menos sobra no
+        # arquivo, mais específico o casamento — "Amil" perde para "Amil Black"
+        # quando o arquivo é Amil_Black.
+        return 80.0 - len(t_nome - t_alvo)
+    if t_nome and t_nome <= t_alvo:
+        return 70.0 - len(t_alvo - t_nome)
+    if alvo in nome or nome in alvo:
+        return 60.0 + min(len(alvo), len(nome)) / 100
+
+    # Última tentativa: grafias quase iguais. O corte alto evita casar marcas
+    # diferentes que por acaso se parecem.
+    proximidade = SequenceMatcher(None, alvo, nome).ratio()
+    return 50.0 + proximidade if proximidade >= 0.88 else 0.0
+
+
 def encontra_logo_operadora(operadora: str | None) -> Path | None:
     """
-    Casa o nome da operadora com um arquivo em assets/logos_operadoras/.
-    'SulAmérica' encontra sulamerica.png, sul-america.svg, SulAmerica.jpg etc.
+    Melhor logo para a operadora, ou None se nenhuma representa bem.
+
+    Avalia todos os arquivos e fica com o de maior pontuação — pegar o primeiro
+    que "serve" faria "Amil Black" cair na logo da Amil, já que ela vem antes
+    na ordem alfabética e o nome dela é um pedaço do outro.
     """
     if not operadora:
         return None
-    alvo = _slug(operadora).replace("-", "")
+    melhor, melhor_nota = None, 0.0
     for arq in _imagens(PASTAS_LOGOS, {".svg"}):
-        nome = _slug(arq.stem).replace("-", "")
-        if nome and (nome in alvo or alvo in nome):
-            return arq
-    return None
+        nota = _pontua(operadora, arq.stem)
+        if nota > melhor_nota:
+            melhor, melhor_nota = arq, nota
+    return melhor
 
 
 def operadoras_disponiveis() -> list[str]:
