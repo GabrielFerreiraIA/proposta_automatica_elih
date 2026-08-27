@@ -3,11 +3,14 @@
    interface. Upload, análise e geração NUNCA são cacheados — são POST e
    precisam do servidor. */
 
-const CACHE = 'cotador-elih-v1';
+/* Trocar a versão invalida o cache antigo no proximo deploy. */
+const CACHE = 'cotador-elih-v2';
+
+/* Só o que não muda entre versões. O app.js e o CSS ficam de fora de proposito:
+   guardá-los aqui fazia o usuário continuar rodando a versão anterior do app
+   depois de um deploy, vendo erros que já tinham sido corrigidos. Eles vêm
+   sempre da rede, e o Cache-Control do servidor cuida da revalidação. */
 const CASCA = [
-  '/',
-  '/static/css/app.css',
-  '/static/app.js',
   '/static/img/elih-mark-circle.png',
   '/static/img/icone-192.png',
   '/static/manifest.webmanifest',
@@ -29,6 +32,14 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
   if (e.request.method !== 'GET' || url.pathname.startsWith('/api/')) return;
+
+  // Código do app sempre da rede: cair para uma versão em cache aqui só
+  // esconderia um deploy novo atrás de um bug já corrigido.
+  const ehCodigo = /\.(js|css)$/.test(url.pathname) || url.pathname === '/';
+  if (ehCodigo) {
+    e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+    return;
+  }
 
   // Rede primeiro: o app é pequeno e o conteúdo precisa estar fresco.
   // O cache existe só para abrir offline e não ficar em branco.

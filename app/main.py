@@ -54,6 +54,20 @@ templates = Jinja2Templates(directory=BASE / "templates")
 _sessoes: dict[str, tuple[float, Documento]] = {}
 
 
+# Caminhos cujo conteúdo muda a cada deploy. Sem isto o navegador guarda o
+# app.js antigo por heurística própria (não há Cache-Control), e o usuário fica
+# rodando a versão anterior sem perceber — inclusive vendo erros já corrigidos.
+# "no-cache" não desliga o cache: obriga a revalidar com o ETag, o que devolve
+# 304 e não custa banda.
+@app.middleware("http")
+async def revalida_a_casca(request: Request, call_next):
+    resposta = await call_next(request)
+    caminho = request.url.path
+    if caminho == "/" or caminho.startswith("/static/") or caminho in ("/sw.js", "/manifest.webmanifest"):
+        resposta.headers["Cache-Control"] = "no-cache, must-revalidate"
+    return resposta
+
+
 def _limpa_sessoes() -> None:
     agora = time.time()
     for sid in [s for s, (t, _) in _sessoes.items() if agora - t > TTL_SESSAO]:
