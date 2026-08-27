@@ -10,9 +10,8 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       ELIH_MODELO_IA: ${ELIH_MODELO_IA:-gpt-4o-mini}
     volumes:
-      # Capa e logos de operadora ficam fora da imagem para você trocar
-      # sem precisar rebuildar.
-      - ./assets:/app/assets
+      # /app/assets NAO e montado de proposito: capa e logos ja vao dentro da
+      # imagem, e um bind mount vazio esconderia tudo o que esta la.
       - cotador-output:/app/output
 
 volumes:

@@ -216,13 +216,24 @@ docker compose up -d --build
    Sem a chave o app funciona igual, só com a copy de regras. **Nunca commite o
    `.env`** — ele está no `.gitignore` de propósito; a chave vive só aqui.
 
-6. **Volume** (aba *Mounts*): monte um volume em **`/app/assets`**. É o que
-   permite trocar a capa e as logos direto no servidor, sem rebuildar a imagem.
-   Na primeira subida, copie o conteúdo de `assets/` para dentro do volume.
+6. **Não monte volume em `/app/assets`.** A capa e as 20 logos já vão dentro da
+   imagem. Um bind mount vazio nessa pasta **esconde** o conteúdo da imagem e o
+   app volta a dizer "Sem logos de operadora". Para trocar uma logo, substitua o
+   arquivo no repositório e faça redeploy — leva o mesmo tempo.
 
-7. **Domínio e HTTPS:** ative o certificado. Isso não é cosmético — o
-   **PWA só instala em HTTPS**. Sem certificado, o app abre normalmente no
-   navegador mas o botão "Instalar" não aparece.
+   *(Se preferir trocar logos sem redeploy, use um volume **nomeado** e copie o
+   conteúdo de `assets/` para dentro dele na primeira subida. Bind mount de pasta
+   vazia, nunca.)*
+
+7. **Limite de upload do proxy.** Uma cotação com rede completa passa de 35 MB, e
+   o corretor envia até 5. Se o proxy cortar, o navegador recebe uma página HTML
+   de erro em vez da resposta da API. No Easypanel, em *Advanced → Nginx/Proxy*,
+   garanta:
+
+   ```
+   client_max_body_size 250M;
+   proxy_read_timeout 300s;
+   ```
 
 8. **Health check:** já vem no Dockerfile, batendo em `/api/saude`.
 
@@ -231,10 +242,20 @@ docker compose up -d --build
 ```bash
 curl https://SEU-DOMINIO/api/saude
 # {"ok":true,"ia":true,"modelo":"gpt-4o-mini"}
+
+curl https://SEU-DOMINIO/api/diagnostico
 ```
 
-- `"ia": false` significa que a `OPENAI_API_KEY` não chegou no container.
-- A tela inicial avisa se a capa ou as logos não forem encontradas.
+`/api/diagnostico` mostra o que o container realmente enxerga — quantas logos
+achou, quais operadoras estão cobertas, se a capa está lá e se a chave de IA
+chegou. É o primeiro lugar para olhar quando algo aparece diferente em produção.
+
+| Sintoma | Causa provável |
+|---|---|
+| `"logos": {"total": 0}` | volume vazio montado em `/app/assets`, ou deploy de um commit sem as logos |
+| `"capa": null` | mesma coisa |
+| `"ia": {"chave": false}` | `OPENAI_API_KEY` não chegou no container |
+| Erro de tamanho no upload | limite do proxy — ver passo 7 |
 
 ### Sobre o tamanho da imagem
 

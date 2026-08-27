@@ -50,6 +50,45 @@ function esc(s) {
   );
 }
 
+/**
+ * Lê a resposta da API tolerando o que NÃO é JSON.
+ *
+ * Quando o upload estoura o limite do proxy, ou o container reinicia, quem
+ * responde é o proxy — com uma página HTML. Fazer resp.json() nesse caso
+ * mostrava "Unexpected token '<'", que não diz nada. Aqui o erro vira o código
+ * HTTP e o motivo provável.
+ */
+async function leResposta(resp, contexto) {
+  const bruto = await resp.text();
+  let dados = null;
+  try {
+    dados = JSON.parse(bruto);
+  } catch {
+    /* veio HTML ou texto puro */
+  }
+
+  if (resp.ok && dados) return dados;
+
+  if (dados && dados.detail) throw new Error(dados.detail);
+
+  if (resp.status === 413) {
+    throw new Error(
+      'O servidor recusou o envio por tamanho. Os PDFs de rede completa passam ' +
+        'de 35 MB cada — aumente o limite de upload do proxy (client_max_body_size).'
+    );
+  }
+  if (resp.status === 502 || resp.status === 504) {
+    throw new Error(
+      `O servidor não respondeu a tempo (${resp.status}). Com vários PDFs grandes ` +
+        'a leitura demora; aumente o timeout do proxy.'
+    );
+  }
+  if (!resp.ok) {
+    throw new Error(`${contexto}: o servidor respondeu ${resp.status}.`);
+  }
+  throw new Error(`${contexto}: resposta inesperada do servidor.`);
+}
+
 /** Grupos de chips com seleção única, ligados por data-grupo/data-valor. */
 function ligaChips(raiz) {
   raiz.querySelectorAll('.chip[data-grupo]').forEach((chip) => {
@@ -162,8 +201,7 @@ async function analisa() {
 
   try {
     const resp = await fetch('/api/analisar', { method: 'POST', body: form });
-    const dados = await resp.json();
-    if (!resp.ok) throw new Error(dados.detail || 'Falha ao ler os PDFs.');
+    const dados = await leResposta(resp, 'Falha ao ler os PDFs');
     estado.sessao = dados.sessao;
     estado.analise = dados;
     // Com mais de um arquivo, a intenção é comparar: já marca tudo (até o limite).
@@ -422,8 +460,7 @@ $('btn-gerar').onclick = async () => {
 
   try {
     const resp = await fetch('/api/gerar', { method: 'POST', body: form });
-    const dados = await resp.json();
-    if (!resp.ok) throw new Error(dados.detail || 'Falha ao gerar.');
+    const dados = await leResposta(resp, 'Falha ao gerar a proposta');
 
     $('link-download').href = dados.url;
     $('link-download').setAttribute('download', dados.nome);

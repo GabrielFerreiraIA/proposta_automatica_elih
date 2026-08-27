@@ -26,7 +26,9 @@ from fastapi.templating import Jinja2Templates
 
 from .parser import Documento, cidades_da_regiao, parse_pdf, unifica
 from .renderer import (
+    PASTAS_LOGOS,
     RAIZ,
+    _imagens,
     encontra_capa,
     encontra_logo_operadora,
     gera_proposta,
@@ -109,6 +111,47 @@ def saude():
     return {"ok": True, "ia": bool(os.getenv("OPENAI_API_KEY")), "modelo": os.getenv("ELIH_MODELO_IA", "gpt-4o-mini")}
 
 
+@app.get("/api/diagnostico")
+def diagnostico():
+    """
+    Estado real do container: útil quando o app está numa VPS sem acesso a shell.
+    Mostra o que ele enxerga de capa, logos e configuração de IA.
+    """
+    from .parser import OPERADORAS, _norm
+
+    logos = _imagens(PASTAS_LOGOS, {".svg"})
+    capa = encontra_capa()
+
+    vistas: dict[str, str] = {}
+    for op in OPERADORAS:
+        vistas.setdefault(_norm(op).replace(" ", ""), op)
+    cobertas = sorted(
+        op for op in vistas.values() if encontra_logo_operadora(op)
+    )
+
+    return {
+        "ok": True,
+        "ia": {
+            "chave": bool(os.getenv("OPENAI_API_KEY")),
+            "modelo": os.getenv("ELIH_MODELO_IA", "gpt-4o-mini"),
+        },
+        "capa": capa.name if capa else None,
+        "logos": {
+            "total": len(logos),
+            "arquivos": sorted(a.name for a in logos),
+            "operadoras_cobertas": cobertas,
+        },
+        "pastas": {
+            "assets": str(RAIZ / "assets"),
+            "logos": [str(p) for p in PASTAS_LOGOS if p.exists()],
+        },
+        "limites": {
+            "max_arquivos": MAX_ARQUIVOS,
+            "tamanho_max_mb": TAMANHO_MAX // (1024 * 1024),
+        },
+    }
+
+
 @app.post("/api/analisar")
 async def analisar(arquivos: list[UploadFile] = File(...)):
     """
@@ -136,13 +179,22 @@ async def analisar(arquivos: list[UploadFile] = File(...)):
             if not nome.lower().endswith(".pdf"):
                 raise HTTPException(400, f"'{nome}' não é um PDF.")
 
-            conteudo = await arquivo.read()
-            if len(conteudo) > TAMANHO_MAX:
-                raise HTTPException(413, f"'{nome}' passa de 80 MB.")
-
+            # Gravado em pedaços: uma cotação de rede completa passa de 35 MB e
+            # carregar o arquivo inteiro na memória derruba VPS pequena quando
+            # chegam vários de uma vez.
             caminho = UPLOADS / f"{sid}_{i}.pdf"
-            caminho.write_bytes(conteudo)
             salvos.append(caminho)
+            tamanho = 0
+            with caminho.open("wb") as destino:
+                while pedaco := await arquivo.read(1024 * 1024):
+                    tamanho += len(pedaco)
+                    if tamanho > TAMANHO_MAX:
+                        raise HTTPException(
+                            413, f"'{nome}' passa de {TAMANHO_MAX // (1024 * 1024)} MB."
+                        )
+                    destino.write(pedaco)
+            if not tamanho:
+                raise HTTPException(400, f"'{nome}' chegou vazio.")
 
             try:
                 doc = parse_pdf(str(caminho))
