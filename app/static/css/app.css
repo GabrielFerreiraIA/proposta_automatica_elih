@@ -513,3 +513,185 @@ h1 {
   line-height: 1;
   cursor: pointer;
 }
+
+/* =========================================================================
+   Custom Stepper & Validation Styles (Elih UI/UX Pro Max)
+   ========================================================================= */
+
+.stepper-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 24px 0 32px;
+  padding: 10px 0;
+  position: relative;
+  user-select: none;
+}
+
+.step-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  z-index: 2;
+  cursor: pointer;
+  flex: 1;
+}
+
+.step-num {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  background: var(--neutral-200);
+  color: var(--text-tertiary);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid transparent;
+  transition: all 250ms var(--ease-out);
+  box-shadow: 0 0 0 2px var(--neutral-50);
+}
+
+.step-label {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 250ms var(--ease-out);
+  white-space: nowrap;
+}
+
+.step-indicator.active .step-num {
+  background: var(--navy-900);
+  color: #fff;
+  border-color: var(--navy-900);
+  box-shadow: 0 0 0 4px var(--navy-100);
+}
+
+.step-indicator.active .step-label {
+  color: var(--navy-900);
+  font-weight: 700;
+}
+
+.step-indicator.completed .step-num {
+  background: var(--success-100);
+  color: var(--success-700);
+  border-color: var(--success-700);
+}
+
+.step-indicator.completed .step-label {
+  color: var(--success-700);
+}
+
+.step-line {
+  flex: 1;
+  height: 3px;
+  background: var(--neutral-200);
+  margin: 0 4px;
+  margin-top: -24px; /* alinha com o círculo */
+  z-index: 1;
+  position: relative;
+  border-radius: var(--radius-full);
+  transition: background 300ms var(--ease-out);
+}
+
+.step-line.completed {
+  background: var(--success-700);
+}
+
+/* Painéis de Sub-Etapas */
+.sub-etapa-panel {
+  animation: slideUpFade 350ms var(--ease-out) forwards;
+  background: var(--neutral-0);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  padding: 26px 22px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-sm);
+  transition: all 250ms var(--ease-out);
+}
+
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Animações e Estilos de Validação */
+.campo.erro-validacao {
+  animation: shake 320ms ease-in-out;
+  border: 2px solid var(--danger-700);
+  background: var(--danger-100);
+  padding: 18px;
+  border-radius: var(--radius-lg);
+  position: relative;
+}
+
+.campo.erro-validacao::after {
+  content: '⚠ Campo obrigatório';
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 11px;
+  color: var(--danger-700);
+  margin-top: 8px;
+}
+
+.campo.erro-validacao .rotulo {
+  color: var(--danger-700);
+}
+
+.campo.erro-validacao .chip {
+  border-color: var(--danger-700);
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+
+/* Polimento Visual para Opções e Planos */
+.opcao-plano {
+  position: relative;
+  overflow: hidden;
+}
+.opcao-plano::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: transparent;
+  transition: background 180ms var(--ease-out);
+}
+.opcao-plano.ativo::before {
+  background: var(--navy-900);
+}
+
+/* Melhorias nos botões de chips */
+.chip {
+  position: relative;
+}
+.chip.ativo::after {
+  content: '✓';
+  display: inline-block;
+  margin-left: 6px;
+  font-weight: 700;
+}
+.chip--mini.ativo::after {
+  content: '✓';
+}
+

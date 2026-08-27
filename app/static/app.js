@@ -20,6 +20,7 @@ const estado = {
     tipo_cnpj: '',
     usar_ia: 'sim',
   },
+  passoConfig: 1, // Passo atual dentro da configuração (1, 2 ou 3)
 };
 
 /* ------------------------------------------------------------- helpers -- */
@@ -28,6 +29,9 @@ function mostra(etapa) {
   ['etapa-upload', 'etapa-config', 'etapa-pronto'].forEach((id) =>
     $(id).classList.toggle('oculto', id !== etapa)
   );
+  if (etapa === 'etapa-config') {
+    mudaSubPasso(1);
+  }
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -99,10 +103,115 @@ function ligaChips(raiz) {
         .forEach((c) => c.classList.remove('ativo'));
       chip.classList.add('ativo');
       estado.escolhas[grupo] = chip.dataset.valor;
-      erro('');
+      limpaErrosValidacao();
     };
   });
 }
+
+/* --- Lógica de Validação e Sub-Passos (UI/UX Pro Max) --- */
+
+function limpaErrosValidacao() {
+  document.querySelectorAll('.campo.erro-validacao').forEach((el) => {
+    el.classList.remove('erro-validacao');
+  });
+  erro('');
+}
+
+function mudaSubPasso(passo) {
+  estado.passoConfig = passo;
+
+  [1, 2, 3].forEach((p) => {
+    $(`sub-etapa-${p}`).classList.toggle('oculto', p !== passo);
+    const indicator = $(`step-ind-${p}`);
+    if (indicator) {
+      indicator.classList.toggle('active', p === passo);
+      indicator.classList.toggle('completed', p < passo);
+    }
+    const line = $(`step-line-${p}`);
+    if (line) {
+      line.classList.toggle('completed', p < passo);
+    }
+  });
+
+  limpaErrosValidacao();
+
+  const btnAnterior = $('btn-passo-anterior');
+  const btnProximo = $('btn-passo-proximo');
+
+  if (passo === 1) {
+    btnAnterior.style.display = 'none';
+    btnProximo.textContent = 'Avançar →';
+  } else {
+    btnAnterior.style.display = 'block';
+    if (passo === 3) {
+      btnProximo.textContent = 'Gerar proposta →';
+    } else {
+      btnProximo.textContent = 'Avançar →';
+    }
+  }
+}
+
+function validaPasso(passo) {
+  limpaErrosValidacao();
+  if (passo === 1) {
+    if (!estado.planos.length) {
+      const campo = $('campo-plano');
+      campo.classList.add('erro-validacao');
+      campo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      erro('Marque pelo menos um plano para continuar.');
+      return false;
+    }
+  } else if (passo === 2) {
+    if (!estado.regiao) {
+      const campo = $('campo-regiao');
+      campo.classList.add('erro-validacao');
+      campo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      erro('Escolha onde o cliente vai usar o plano para continuar.');
+      return false;
+    }
+  } else if (passo === 3) {
+    for (const id of estado.planos) {
+      const o = estado.analise.opcoes.find((x) => x.id === id);
+      if (!o) continue;
+      for (const campo of o.faltando) {
+        if (!(estado.atributos[id] || {})[campo]) {
+          const el = $('campo-atributos');
+          el.classList.add('erro-validacao');
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          erro(
+            `Confirme ${campo === 'abrangencia' ? 'a abrangência' : 'a coparticipação'} de ` +
+              `${o.plano} — não está escrita no PDF e eu não vou supor.`
+          );
+          return false;
+        }
+      }
+    }
+  }
+  return true;
+}
+
+// Configurar cliques diretos no stepper
+[1, 2, 3].forEach((p) => {
+  const indicator = $(`step-ind-${p}`);
+  if (indicator) {
+    indicator.onclick = () => {
+      if (p < estado.passoConfig) {
+        mudaSubPasso(p);
+      } else if (p > estado.passoConfig) {
+        let val = true;
+        for (let step = estado.passoConfig; step < p; step++) {
+          if (!validaPasso(step)) {
+            val = false;
+            break;
+          }
+        }
+        if (val) {
+          mudaSubPasso(p);
+        }
+      }
+    };
+  }
+});
 
 /* -------------------------------------------------------------- upload -- */
 
@@ -267,7 +376,7 @@ function montaPlanos(d) {
             return erro(`Dá para comparar no máximo ${MAX_COMPARAR} planos por proposta.`);
           estado.planos.push(id);
         }
-        erro('');
+        limpaErrosValidacao();
         pintaPlanos();
         montaAtributos();
       };
@@ -353,7 +462,7 @@ function montaAtributos() {
           .forEach((c) => c.classList.remove('ativo'));
         chip.classList.add('ativo');
         estado.atributos[opcao] = { ...(estado.atributos[opcao] || {}), [campo]: v };
-        erro('');
+        limpaErrosValidacao();
       };
     });
 }
@@ -387,7 +496,7 @@ function montaRegioes(d) {
         estado.regiao = chip.dataset.regiao;
         estado.cidades.clear();
         montaCidades(d.regioes.find((r) => r.nome === estado.regiao));
-        erro('');
+        limpaErrosValidacao();
       };
     });
 }
@@ -425,22 +534,7 @@ function montaCidades(regiao) {
 
 /* --------------------------------------------------------- etapa três -- */
 
-$('btn-gerar').onclick = async () => {
-  if (!estado.regiao) return erro('Escolha onde o cliente vai usar o plano.');
-  if (!estado.planos.length) return erro('Marque pelo menos um plano.');
-
-  for (const id of estado.planos) {
-    const o = estado.analise.opcoes.find((x) => x.id === id);
-    for (const campo of o.faltando) {
-      if (!(estado.atributos[id] || {})[campo]) {
-        return erro(
-          `Confirme ${campo === 'abrangencia' ? 'a abrangência' : 'a coparticipação'} de ` +
-            `${o.plano} — não está escrita no PDF e eu não vou supor.`
-        );
-      }
-    }
-  }
-
+async function gerarProposta() {
   erro('');
   carregando(
     true,
@@ -480,6 +574,23 @@ $('btn-gerar').onclick = async () => {
     erro(e.message);
   } finally {
     carregando(false);
+  }
+}
+
+// Botões de navegação do stepper
+$('btn-passo-anterior').onclick = () => {
+  if (estado.passoConfig > 1) {
+    mudaSubPasso(estado.passoConfig - 1);
+  }
+};
+
+$('btn-passo-proximo').onclick = () => {
+  if (validaPasso(estado.passoConfig)) {
+    if (estado.passoConfig < 3) {
+      mudaSubPasso(estado.passoConfig + 1);
+    } else {
+      gerarProposta();
+    }
   }
 };
 

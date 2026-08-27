@@ -90,76 +90,107 @@
     <h1>Confirme os dados</h1>
     <p class="lead" id="resumo-leitura"></p>
 
-    <div class="campo" id="campo-plano">
-      <label class="rotulo">Quais planos entram na proposta?</label>
-      <p class="ajuda" id="ajuda-plano">
-        O primeiro que você marcar é o recomendado. Marque 2 a 4 para gerar a
-        página de comparação lado a lado.
-      </p>
-      <div class="opcoes opcoes--empilhadas" id="planos"></div>
-    </div>
-
-    <div class="campo">
-      <label class="rotulo">Onde o cliente vai usar o plano?</label>
-      <div class="opcoes" id="regioes"></div>
-    </div>
-
-    <div class="campo" id="campo-cidades" hidden>
-      <label class="rotulo">
-        Cidades ou zonas específicas <span class="opcional">opcional</span>
-      </label>
-      <p class="ajuda">Sem seleção, a proposta mostra a região inteira.</p>
-      <div class="opcoes opcoes--densas" id="cidades"></div>
-    </div>
-
-    <div class="campo">
-      <label class="rotulo">O cliente já tem plano de saúde ativo?</label>
-      <div class="opcoes">
-        <button type="button" class="chip" data-grupo="possui_plano" data-valor="sim">
-          Sim — aproveitar carência
-        </button>
-        <button type="button" class="chip ativo" data-grupo="possui_plano" data-valor="nao">
-          Não tem plano
-        </button>
+    <!-- Stepper de Progresso -->
+    <div class="stepper-header" id="stepper-header">
+      <div class="step-indicator active" data-step="1" id="step-ind-1">
+        <span class="step-num">1</span>
+        <span class="step-label">Planos</span>
+      </div>
+      <div class="step-line" id="step-line-1"></div>
+      <div class="step-indicator" data-step="2" id="step-ind-2">
+        <span class="step-num">2</span>
+        <span class="step-label">Localidade</span>
+      </div>
+      <div class="step-line" id="step-line-2"></div>
+      <div class="step-indicator" data-step="3" id="step-ind-3">
+        <span class="step-num">3</span>
+        <span class="step-label">Ajustes & IA</span>
       </div>
     </div>
 
-    <div class="campo">
-      <label class="rotulo">Tipo de CNPJ</label>
-      <div class="opcoes">
-        <button type="button" class="chip ativo" data-grupo="tipo_cnpj" data-valor="">Não se aplica</button>
-        <button type="button" class="chip" data-grupo="tipo_cnpj" data-valor="mei">MEI</button>
-        <button type="button" class="chip" data-grupo="tipo_cnpj" data-valor="ltda">Limitada</button>
+    <!-- SUB-ETAPA 1: PLANOS -->
+    <div class="sub-etapa-panel" id="sub-etapa-1">
+      <div class="campo" id="campo-plano">
+        <label class="rotulo">Quais planos entram na proposta?</label>
+        <p class="ajuda" id="ajuda-plano">
+          O primeiro que você marcar é o recomendado. Marque 2 a 4 para gerar a
+          página de comparação lado a lado.
+        </p>
+        <div class="opcoes opcoes--empilhadas" id="planos"></div>
       </div>
     </div>
 
-    <div class="campo oculto" id="campo-atributos">
-      <label class="rotulo">
-        Complete o que falta <span class="obrigatorio">não declarado no PDF</span>
-      </label>
-      <p class="ajuda">
-        Não achei essas informações escritas na cotação. Confirme para eu não supor —
-        elas aparecem na proposta e no comparativo.
-      </p>
-      <div id="atributos"></div>
-    </div>
-
-    {% if tem_ia %}
-    <div class="campo">
-      <label class="rotulo">Refinar a copy com IA</label>
-      <div class="opcoes">
-        <button type="button" class="chip ativo" data-grupo="usar_ia" data-valor="sim">Sim</button>
-        <button type="button" class="chip" data-grupo="usar_ia" data-valor="nao">Não</button>
+    <!-- SUB-ETAPA 2: LOCALIDADE -->
+    <div class="sub-etapa-panel oculto" id="sub-etapa-2">
+      <div class="campo" id="campo-regiao">
+        <label class="rotulo">Onde o cliente vai usar o plano?</label>
+        <div class="opcoes" id="regioes"></div>
       </div>
-      <p class="ajuda">
-        A IA só reescreve o texto no tom da marca. Valores, rede e coberturas continuam
-        vindo do PDF — a saída é validada e recusada se inventar qualquer número.
-      </p>
-    </div>
-    {% endif %}
 
+      <div class="campo" id="campo-cidades" hidden>
+        <label class="rotulo">
+          Cidades ou zonas específicas <span class="opcional">opcional</span>
+        </label>
+        <p class="ajuda">Sem seleção, a proposta mostra a região inteira.</p>
+        <div class="opcoes opcoes--densas" id="cidades"></div>
+      </div>
+    </div>
+
+    <!-- SUB-ETAPA 3: AJUSTES E PERFIL -->
+    <div class="sub-etapa-panel oculto" id="sub-etapa-3">
+      <div class="campo" id="campo-possui_plano">
+        <label class="rotulo">O cliente já tem plano de saúde ativo?</label>
+        <div class="opcoes">
+          <button type="button" class="chip" data-grupo="possui_plano" data-valor="sim">
+            Sim — aproveitar carência
+          </button>
+          <button type="button" class="chip ativo" data-grupo="possui_plano" data-valor="nao">
+            Não tem plano
+          </button>
+        </div>
+      </div>
+
+      <div class="campo" id="campo-tipo_cnpj">
+        <label class="rotulo">Tipo de CNPJ</label>
+        <div class="opcoes">
+          <button type="button" class="chip ativo" data-grupo="tipo_cnpj" data-valor="">Não se aplica</button>
+          <button type="button" class="chip" data-grupo="tipo_cnpj" data-valor="mei">MEI</button>
+          <button type="button" class="chip" data-grupo="tipo_cnpj" data-valor="ltda">Limitada</button>
+        </div>
+      </div>
+
+      <div class="campo oculto" id="campo-atributos">
+        <label class="rotulo">
+          Complete o que falta <span class="obrigatorio">não declarado no PDF</span>
+        </label>
+        <p class="ajuda">
+          Não achei essas informações escritas na cotação. Confirme para eu não supor —
+          elas aparecem na proposta e no comparativo.
+        </p>
+        <div id="atributos"></div>
+      </div>
+
+      {% if tem_ia %}
+      <div class="campo" id="campo-usar_ia">
+        <label class="rotulo">Refinar a copy com IA</label>
+        <div class="opcoes">
+          <button type="button" class="chip ativo" data-grupo="usar_ia" data-valor="sim">Sim</button>
+          <button type="button" class="chip" data-grupo="usar_ia" data-valor="nao">Não</button>
+        </div>
+        <p class="ajuda">
+          A IA só reescreve o texto no tom da marca. Valores, rede e coberturas continuam
+          vindo do PDF — a saída é validada e recusada se inventar qualquer número.
+        </p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Ações de Navegação -->
     <div class="acoes">
-      <button type="button" class="btn btn--primario" id="btn-gerar">Gerar proposta →</button>
+      <div style="display: flex; gap: 10px; width: 100%;">
+        <button type="button" class="btn btn--secundario" id="btn-passo-anterior" style="flex: 1; display: none;">← Voltar</button>
+        <button type="button" class="btn btn--primario" id="btn-passo-proximo" style="flex: 2;">Avançar →</button>
+      </div>
       <button type="button" class="btn btn--texto" id="btn-voltar">Trocar PDF</button>
     </div>
   </section>
