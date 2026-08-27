@@ -206,7 +206,13 @@ docker compose up -d --build
 4. **Porta:** interna **8000**. O container respeita a variável `PORT` se o
    Easypanel injetar outra.
 
-5. **Variáveis de ambiente** (aba *Environment*):
+5. **Memória: no mínimo 1 GB, recomendado 2 GB** (aba *Resources*). O Chromium
+   que gera o PDF sozinho usa ~500 MB. Container com limite menor é morto pelo
+   kernel no meio da geração, e o navegador recebe um **502** — que parece erro
+   de rede mas é falta de memória. Confira em *Logs*: `Killed` ou reinício do
+   container confirmam.
+
+6. **Variáveis de ambiente** (aba *Environment*):
 
    | Variável | Valor |
    |---|---|
@@ -216,7 +222,7 @@ docker compose up -d --build
    Sem a chave o app funciona igual, só com a copy de regras. **Nunca commite o
    `.env`** — ele está no `.gitignore` de propósito; a chave vive só aqui.
 
-6. **Não monte volume em `/app/assets`.** A capa e as 20 logos já vão dentro da
+7. **Não monte volume em `/app/assets`.** A capa e as 20 logos já vão dentro da
    imagem. Um bind mount vazio nessa pasta **esconde** o conteúdo da imagem e o
    app volta a dizer "Sem logos de operadora". Para trocar uma logo, substitua o
    arquivo no repositório e faça redeploy — leva o mesmo tempo.
@@ -225,7 +231,7 @@ docker compose up -d --build
    conteúdo de `assets/` para dentro dele na primeira subida. Bind mount de pasta
    vazia, nunca.)*
 
-7. **Limite de upload do proxy.** Uma cotação com rede completa passa de 35 MB, e
+8. **Limite de upload do proxy.** Uma cotação com rede completa passa de 35 MB, e
    o corretor envia até 5. Se o proxy cortar, o navegador recebe uma página HTML
    de erro em vez da resposta da API. No Easypanel, em *Advanced → Nginx/Proxy*,
    garanta:
@@ -235,7 +241,7 @@ docker compose up -d --build
    proxy_read_timeout 300s;
    ```
 
-8. **Health check:** já vem no Dockerfile, batendo em `/api/saude`.
+9. **Health check:** já vem no Dockerfile, batendo em `/api/saude`.
 
 ### Verificações depois de subir
 
@@ -255,7 +261,8 @@ chegou. É o primeiro lugar para olhar quando algo aparece diferente em produç�
 | `"logos": {"total": 0}` | volume vazio montado em `/app/assets`, ou deploy de um commit sem as logos |
 | `"capa": null` | mesma coisa |
 | `"ia": {"chave": false}` | `OPENAI_API_KEY` não chegou no container |
-| Erro de tamanho no upload | limite do proxy — ver passo 7 |
+| Erro de tamanho no upload | limite do proxy — ver passo 8 |
+| 502 no meio da geração | memória do container — ver passo 5 |
 
 ### Sobre o tamanho da imagem
 

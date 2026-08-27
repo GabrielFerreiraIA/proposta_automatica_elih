@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import base64
 import datetime as dt
+import io
 from difflib import SequenceMatcher
 import mimetypes
 import re
@@ -56,11 +57,65 @@ _env = Environment(
 )
 
 
-def _data_uri(caminho: Path) -> str | None:
+# Altura em pixels com que cada imagem entra no HTML. O PDF é impresso em
+# slots de poucos milímetros: mandar o arquivo original (uma logo de 1600x600
+# com 300 KB para um espaço de 14 mm) só infla o HTML e a memória do Chromium.
+# Os valores abaixo dão mais de 700 dpi no slot — folga de sobra para impressão.
+ALTURA_LOGO_OPERADORA = 400
+ALTURA_MARCA_ELIH = 240
+ALTURA_CAPA = 2100
+
+_cache_uri: dict[tuple[str, float, int], str] = {}
+
+
+def _data_uri(caminho: Path | None, altura: int | None = None) -> str | None:
+    """
+    Imagem como data URI, reduzida para a altura em que será exibida.
+
+    O resultado fica em cache pela data de modificação do arquivo, então trocar
+    uma logo continua tendo efeito imediato sem reprocessar a cada geração.
+    """
     if not caminho or not caminho.exists():
         return None
+
+    chave = (str(caminho), caminho.stat().st_mtime, altura or 0)
+    if chave in _cache_uri:
+        return _cache_uri[chave]
+
     mime = mimetypes.guess_type(caminho.name)[0] or "application/octet-stream"
-    return f"data:{mime};base64,{base64.b64encode(caminho.read_bytes()).decode()}"
+    dados = caminho.read_bytes()
+
+    # SVG é vetor: reduzir não faz sentido e só estragaria o arquivo.
+    if altura and caminho.suffix.lower() != ".svg":
+        try:
+            from PIL import Image
+
+            with Image.open(io.BytesIO(dados)) as im:
+                # Transparência decide o formato: logo precisa de PNG para não
+                # virar um retângulo branco sobre a coluna navy; a capa é uma
+                # foto opaca de página inteira e em JPEG ocupa uma fração disso.
+                tem_alfa = im.mode in ("RGBA", "LA", "PA") or "transparency" in im.info
+
+                if im.height > altura:
+                    largura = max(1, round(im.width * altura / im.height))
+                    im = im.resize((largura, altura), Image.LANCZOS)
+
+                buf = io.BytesIO()
+                if tem_alfa:
+                    im.convert("RGBA").save(buf, format="PNG", optimize=True)
+                    novo_mime = "image/png"
+                else:
+                    im.convert("RGB").save(buf, format="JPEG", quality=85, optimize=True)
+                    novo_mime = "image/jpeg"
+
+                if buf.tell() < len(dados):
+                    dados, mime = buf.getvalue(), novo_mime
+        except Exception:  # noqa: BLE001 — imagem exótica entra como está
+            pass
+
+    uri = f"data:{mime};base64,{base64.b64encode(dados).decode()}"
+    _cache_uri[chave] = uri
+    return uri
 
 
 def _css_pdf() -> str:
@@ -284,7 +339,7 @@ def _detalhe_plano(bloco: Cotacao, coluna, ctx: dict[str, Any]) -> dict[str, Any
         "cidades_exibidas": rede["cidades"][:limite_cidades],
         "cidades_restantes": max(0, len(rede["cidades"]) - limite_cidades),
         "reembolsos_exibidos": bloco.reembolsos[: int(ctx.get("max_reembolsos", 8))],
-        "logo": _data_uri(logo) if logo else None,
+        "logo": _data_uri(logo, ALTURA_LOGO_OPERADORA) if logo else None,
     }
 
 
@@ -297,9 +352,21 @@ def monta_contexto(cot: Cotacao, ctx: dict[str, Any]) -> dict[str, Any]:
         planos = [_detalhe_plano(cot, coluna, ctx)]
 
     principal = planos[0]
-    copy = copy_engine.monta_copy(
-        principal["cot"], principal["rede"], ctx, principal["cot"].colunas.index(principal["coluna"])
-    )
+    # O ajuste de página re-renderiza várias vezes até tudo caber. A copy não
+    # muda entre essas tentativas — só o quanto dela cabe —, então ela é montada
+    # uma vez e reaproveitada. Sem isso a IA era chamada a cada tentativa: cinco
+    # chamadas por proposta, cinco vezes o custo e meio minuto a mais de espera,
+    # o bastante para o proxy desistir.
+    pronta = ctx.get("_copy_pronta")
+    if pronta is None:
+        copy = copy_engine.monta_copy(
+            principal["cot"],
+            principal["rede"],
+            ctx,
+            principal["cot"].colunas.index(principal["coluna"]),
+        )
+    else:
+        copy = {**pronta, "objecoes": pronta["objecoes"][: int(ctx.get("max_objecoes", 4))]}
     capa = encontra_capa()
 
     return {
@@ -317,10 +384,10 @@ def monta_contexto(cot: Cotacao, ctx: dict[str, Any]) -> dict[str, Any]:
         "titulo_capa": _titulo_capa(principal["cot"], principal["coluna"]),
         "subtitulo_capa": _subtitulo_capa(principal["cot"], principal["rede"], principal["coluna"]),
         "data_emissao": _data_extenso(),
-        "capa_url": _data_uri(capa) if capa else None,
-        "logo_lockup": _data_uri(STATIC / "img" / "elih-lockup-white-on-navy.png"),
-        "logo_wordmark": _data_uri(STATIC / "img" / "elih-wordmark-navy.png"),
-        "logo_mark": _data_uri(STATIC / "img" / "elih-mark-circle.png"),
+        "capa_url": _data_uri(capa, ALTURA_CAPA) if capa else None,
+        "logo_lockup": _data_uri(STATIC / "img" / "elih-lockup-white-on-navy.png", ALTURA_MARCA_ELIH),
+        "logo_wordmark": _data_uri(STATIC / "img" / "elih-wordmark-navy.png", ALTURA_MARCA_ELIH),
+        "logo_mark": _data_uri(STATIC / "img" / "elih-mark-circle.png", ALTURA_MARCA_ELIH),
         "css_inline": _css_pdf(),
     }
 
@@ -471,12 +538,18 @@ def gera_proposta(
         navegador = pw.chromium.launch(args=["--no-sandbox", "--disable-dev-shm-usage"])
         try:
             dados: dict[str, Any] = {}
+            copy_pronta: dict[str, Any] | None = None
             for _ in range(sum(len(v) for v in NIVEIS.values())):
                 tentativa = _ajusta(ctx, niveis)
                 if documento is not None:
                     tentativa["_planos"] = _monta_planos(documento, tentativa)
                     tentativa["_comparativo"] = _monta_comparativo(documento, tentativa)
+                tentativa["_copy_pronta"] = copy_pronta
                 html, dados = render_html(cot, tentativa)
+                # A primeira tentativa usa o nível mais completo: guardamos a copy
+                # dela (já refinada pela IA) para as tentativas seguintes.
+                if copy_pronta is None:
+                    copy_pronta = dados["copy"]
                 esperadas = len(_grupos_das_paginas(
                     bool(tentativa.get("_comparativo")), len(dados["planos"])
                 ))

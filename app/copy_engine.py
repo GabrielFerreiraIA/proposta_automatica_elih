@@ -566,12 +566,19 @@ def monta_comparativo(itens: list[dict[str, Any]], recomendado: int = 0) -> dict
                 return r["valor"]
         return "—"
 
+    def vidas(item: dict[str, Any]) -> str | None:
+        for r in item["coluna"].valores_por_idade:
+            if r["faixa"] == "Totais":
+                return r.get("vidas")
+        return None
+
     colunas = []
     for i, it in enumerate(itens):
         cot, col, rede = it["cot"], it["coluna"], it["rede"]
         colunas.append(
             {
                 "recomendado": i == recomendado,
+                "vidas": vidas(it),
                 "operadora": cot.operadora,
                 "logo": it.get("logo"),
                 "plano": col.plano,
@@ -615,6 +622,21 @@ def _leitura_comparativo(colunas: list[dict[str, Any]], recomendado: int) -> lis
     rec = colunas[recomendado]
     fora = [c for i, c in enumerate(colunas) if i != recomendado]
     linhas: list[str] = []
+
+    # Cotações feitas para grupos de tamanhos diferentes não podem ser comparadas
+    # pelo total: uma proposta que anuncia "menor mensalidade" comparando 1 vida
+    # com 3 induz o cliente ao erro. Avisar é obrigatório, não opcional.
+    contagens = {c.get("vidas") for c in colunas if c.get("vidas")}
+    if len(contagens) > 1:
+        detalhe = ", ".join(
+            f"{c['plano']} ({c['vidas']} {'vida' if c['vidas'] == '1' else 'vidas'})"
+            for c in colunas
+            if c.get("vidas")
+        )
+        linhas.append(
+            "Atenção: as cotações não cobrem o mesmo número de vidas — "
+            f"{detalhe}. Os totais mensais não são comparáveis diretamente."
+        )
 
     def nomes(itens: list[dict[str, Any]]) -> str:
         """Nomes sem repetir — dois PDFs podem trazer o mesmo produto."""
