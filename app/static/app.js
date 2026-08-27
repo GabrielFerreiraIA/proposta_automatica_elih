@@ -93,6 +93,39 @@ async function leResposta(resp, contexto) {
   throw new Error(`${contexto}: resposta inesperada do servidor.`);
 }
 
+/**
+ * Envia com barra de progresso.
+ *
+ * Usa XMLHttpRequest porque o fetch não informa quanto do upload já subiu. No
+ * celular, mandar 36 MB por 4G leva minutos: sem esse retorno a tela parece
+ * travada e o usuário desiste achando que não funcionou.
+ */
+function enviaComProgresso(url, form, aoProgredir) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', url);
+    xhr.timeout = 15 * 60 * 1000; // conexão móvel lenta com vários PDFs
+
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable && aoProgredir) aoProgredir(e.loaded / e.total);
+    };
+    // Resposta no mesmo formato que leResposta() espera do fetch.
+    xhr.onload = () =>
+      resolve({
+        ok: xhr.status >= 200 && xhr.status < 300,
+        status: xhr.status,
+        text: async () => xhr.responseText,
+      });
+    xhr.onerror = () =>
+      reject(new Error('A conexão caiu durante o envio. Verifique a internet e tente de novo.'));
+    xhr.ontimeout = () =>
+      reject(new Error('O envio demorou demais. Tente numa conexão melhor ou envie menos PDFs.'));
+    xhr.onabort = () => reject(new Error('Envio cancelado.'));
+
+    xhr.send(form);
+  });
+}
+
 /** Grupos de chips com seleção única, ligados por data-grupo/data-valor. */
 function ligaChips(raiz) {
   raiz.querySelectorAll('.chip[data-grupo]').forEach((chip) => {
@@ -238,18 +271,55 @@ inputArquivo.onchange = () => {
 );
 drop.addEventListener('drop', (e) => adiciona([...e.dataTransfer.files]));
 
-function adiciona(novos) {
-  const pdfs = novos.filter((f) => f.name.toLowerCase().endsWith('.pdf'));
-  if (pdfs.length < novos.length) erro('Ignorei os arquivos que não eram PDF.');
-  else erro('');
+/**
+ * Todo PDF comeca com os bytes "%PDF-". Conferir isso e mais confiavel que
+ * olhar a extensao: no celular, arquivos vindos do Drive, do WhatsApp ou da
+ * pasta Downloads chegam com nome generico e sem ".pdf", e o filtro por nome
+ * os descartava em silencio — o usuario tocava em enviar e nada acontecia.
+ */
+async function ehPdf(file) {
+  try {
+    const inicio = await file.slice(0, 5).arrayBuffer();
+    return new TextDecoder().decode(inicio) === '%PDF-';
+  } catch {
+    return false;
+  }
+}
 
-  for (const f of pdfs) {
+/** Garante um nome legivel e com extensao para exibir e enviar. */
+function nomeDeArquivo(file, indice) {
+  const nome = (file.name || '').trim();
+  if (nome.toLowerCase().endsWith('.pdf')) return nome;
+  return `${nome || `cotacao-${indice}`}.pdf`;
+}
+
+async function adiciona(novos) {
+  erro('');
+  const recusados = [];
+
+  for (const f of novos) {
     if (estado.arquivos.length >= MAX_ARQUIVOS) {
       erro(`Máximo de ${MAX_ARQUIVOS} PDFs por proposta.`);
       break;
     }
-    const repetido = estado.arquivos.some((x) => x.name === f.name && x.size === f.size);
-    if (!repetido) estado.arquivos.push(f);
+    if (!(await ehPdf(f))) {
+      recusados.push(f.name || 'arquivo sem nome');
+      continue;
+    }
+    const repetido = estado.arquivos.some((x) => x.arquivo.size === f.size && x.nome === nomeDeArquivo(f, 0));
+    if (repetido) continue;
+    estado.arquivos.push({
+      arquivo: f,
+      nome: nomeDeArquivo(f, estado.arquivos.length + 1),
+    });
+  }
+
+  if (recusados.length) {
+    erro(
+      recusados.length === novos.length
+        ? 'Esse arquivo não é um PDF. Escolha a cotação em PDF que a plataforma gerou.'
+        : `Ignorei ${recusados.length} arquivo(s) que não eram PDF: ${recusados.join(', ')}.`
+    );
   }
   pintaArquivos();
 }
@@ -258,12 +328,12 @@ function pintaArquivos() {
   const n = estado.arquivos.length;
   $('lista-arquivos').innerHTML = estado.arquivos
     .map(
-      (f, i) => `
+      (item, i) => `
       <li class="arq">
         <span class="arq__n">${i + 1}</span>
         <span class="arq__corpo">
-          <span class="arq__nome">${esc(f.name)}</span>
-          <span class="arq__tam">${(f.size / 1048576).toFixed(1)} MB</span>
+          <span class="arq__nome">${esc(item.nome)}</span>
+          <span class="arq__tam">${(item.arquivo.size / 1048576).toFixed(1)} MB</span>
         </span>
         <button type="button" class="arq__x" data-i="${i}" aria-label="Remover">×</button>
       </li>`
@@ -306,10 +376,21 @@ async function analisa() {
   );
 
   const form = new FormData();
-  estado.arquivos.forEach((f) => form.append('arquivos', f));
+  estado.arquivos.forEach((item) => form.append('arquivos', item.arquivo, item.nome));
+
+  const mb = estado.arquivos.reduce((t, i) => t + i.arquivo.size, 0) / 1048576;
 
   try {
-    const resp = await fetch('/api/analisar', { method: 'POST', body: form });
+    const resp = await enviaComProgresso('/api/analisar', form, (fracao) => {
+      const pct = Math.round(fracao * 100);
+      carregando(
+        true,
+        pct < 100 ? `Enviando… ${pct}%` : n > 1 ? `Lendo ${n} cotações…` : 'Lendo o PDF…',
+        pct < 100
+          ? `${mb.toFixed(0)} MB no total — não feche esta tela`
+          : 'Extraindo valores, rede credenciada e reembolso'
+      );
+    });
     const dados = await leResposta(resp, 'Falha ao ler os PDFs');
     estado.sessao = dados.sessao;
     estado.analise = dados;

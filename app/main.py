@@ -189,9 +189,7 @@ async def analisar(arquivos: list[UploadFile] = File(...)):
 
     try:
         for i, arquivo in enumerate(arquivos):
-            nome = arquivo.filename or f"arquivo-{i + 1}.pdf"
-            if not nome.lower().endswith(".pdf"):
-                raise HTTPException(400, f"'{nome}' não é um PDF.")
+            nome = arquivo.filename or f"cotacao-{i + 1}.pdf"
 
             # Gravado em pedaços: uma cotação de rede completa passa de 35 MB e
             # carregar o arquivo inteiro na memória derruba VPS pequena quando
@@ -201,6 +199,11 @@ async def analisar(arquivos: list[UploadFile] = File(...)):
             tamanho = 0
             with caminho.open("wb") as destino:
                 while pedaco := await arquivo.read(1024 * 1024):
+                    # É PDF pelos primeiros bytes, não pela extensão: no celular
+                    # o arquivo chega do Drive ou do WhatsApp com nome genérico e
+                    # sem ".pdf", e recusar por nome barrava cotação legítima.
+                    if not tamanho and not pedaco.startswith(b"%PDF-"):
+                        raise HTTPException(400, f"'{nome}' não é um PDF.")
                     tamanho += len(pedaco)
                     if tamanho > TAMANHO_MAX:
                         raise HTTPException(

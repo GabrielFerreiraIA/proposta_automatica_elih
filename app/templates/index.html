@@ -52,7 +52,11 @@
     </p>
 
     <label class="drop" id="drop">
-      <input type="file" id="arquivo" accept="application/pdf,.pdf" multiple hidden>
+      {# application/octet-stream entra na lista porque alguns provedores do Android
+   (Drive, Downloads) declaram o PDF assim, e um accept restrito deixa o arquivo
+   cinza no seletor — o usuário não consegue nem escolher. #}
+      <input type="file" id="arquivo" multiple hidden
+             accept="application/pdf,application/octet-stream,.pdf">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"
            stroke-linecap="round" stroke-linejoin="round" class="drop__icone">
         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
