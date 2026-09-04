@@ -150,11 +150,20 @@ erro nenhum. O verificador trata isso como erro grave.
 o parser leu literalmente do PDF. Atributo ausente, bloco ausente — é assim que a
 proposta nunca promete cobertura que o plano não tem.
 
-**Camada de IA (opcional).** Com `OPENAI_API_KEY` no ambiente, o modelo reescreve
-resumo e objeções no tom da marca. Ele recebe uma lista fechada de fatos e é
-proibido de introduzir números.
+**Camada de IA — hoje DESLIGADA.** Ela nunca foi necessária: a copy de regras é a
+versão revisada por humano e cobre todos os textos sozinha. O refino por IA é um
+acabamento.
 
-Duas travas na saída:
+Está desligada desde que a conta OpenAI ficou sem crédito. Deixá-la ligada nesse
+estado era pior do que desligar — cada geração tentava a API, esperava o erro 429
+e só então caía nas regras, gastando segundos para chegar no mesmo texto. Com
+`ELIH_IA=0` **nenhuma chamada é feita**.
+
+**Para religar:** ter crédito na conta, preencher `OPENAI_API_KEY` e definir
+`ELIH_IA=1`. Nada mais muda — o seletor reaparece sozinho na interface.
+
+Quando ligada, o modelo reescreve resumo e objeções no tom da marca, recebendo
+uma lista fechada de fatos e proibido de introduzir números. Duas travas na saída:
 
 - `_valida_reescrita()` recusa a resposta se aparecer qualquer valor, percentual,
   prazo ou contagem que não esteja no texto original. A comparação normaliza
@@ -165,12 +174,15 @@ Duas travas na saída:
   praticamente igual — nesse caso a copy de regras, revisada por humano, é melhor
   que uma cópia dela.
 
-Recusa, erro de rede ou ausência de chave caem de volta na copy de regras — a
+Recusa, erro de rede ou falta de crédito caem de volta na copy de regras — a
 geração nunca falha por causa da IA. O campo `motor` no JSON de resposta diz qual
-camada produziu o texto e quanto foi reescrito.
+camada produziu o texto: `regras curadas` com a IA desligada, ou
+`IA <modelo> + validação (N% reescrito)` com ela ligada.
 
-**Modelo.** Padrão `gpt-4o-mini`. Os três candidatos passaram 4/4 na validação com
-a carga real e produzem texto equivalente; troque por `ELIH_MODELO_IA`:
+**Modelo e custo, quando ligada.** A copy é montada uma vez e reaproveitada entre
+as tentativas de ajuste de página — antes eram 5 chamadas por proposta. Os três
+candidatos passaram 4/4 na validação com a carga real; troque por
+`ELIH_MODELO_IA`:
 
 | Modelo | Custo por proposta | Observação |
 |---|---|---|
@@ -216,11 +228,12 @@ docker compose up -d --build
 
    | Variável | Valor |
    |---|---|
-   | `OPENAI_API_KEY` | sua chave |
+   | `ELIH_IA` | `0` — refino por IA desligado |
+   | `OPENAI_API_KEY` | opcional; só é usada com `ELIH_IA=1` |
    | `ELIH_MODELO_IA` | `gpt-4o-mini` |
 
-   Sem a chave o app funciona igual, só com a copy de regras. **Nunca commite o
-   `.env`** — ele está no `.gitignore` de propósito; a chave vive só aqui.
+   Com `ELIH_IA=0` o app não faz nenhuma chamada à OpenAI e funciona por
+   completo. **Nunca commite o `.env`** — ele está no `.gitignore` de propósito.
 
 7. **Não monte volume em `/app/assets`.** A capa e as 20 logos já vão dentro da
    imagem. Um bind mount vazio nessa pasta **esconde** o conteúdo da imagem e o
@@ -260,7 +273,7 @@ chegou. É o primeiro lugar para olhar quando algo aparece diferente em produç�
 |---|---|
 | `"logos": {"total": 0}` | volume vazio montado em `/app/assets`, ou deploy de um commit sem as logos |
 | `"capa": null` | mesma coisa |
-| `"ia": {"chave": false}` | `OPENAI_API_KEY` não chegou no container |
+| `"ia": {"ativa": false}` | esperado: refino por IA desligado (`ELIH_IA=0`) |
 | Erro de tamanho no upload | limite do proxy — ver passo 8 |
 | 502 no meio da geração | memória do container — ver passo 5 |
 

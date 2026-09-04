@@ -6,7 +6,9 @@ services:
     ports:
       - "8000:8000"
     environment:
-      # Opcional: sem a chave, a copy usa o motor de regras e tudo funciona igual.
+      # Refino por IA desligado por padrao: o app funciona inteiro com a copy
+      # de regras. Para ligar, ELIH_IA=1 e uma chave com credito.
+      ELIH_IA: ${ELIH_IA:-0}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       ELIH_MODELO_IA: ${ELIH_MODELO_IA:-gpt-4o-mini}
     volumes:

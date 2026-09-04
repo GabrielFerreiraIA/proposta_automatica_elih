@@ -24,6 +24,7 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+from .copy_engine import ia_ativa
 from .parser import Documento, cidades_da_regiao, parse_pdf, unifica
 from .renderer import (
     PASTAS_LOGOS,
@@ -93,7 +94,7 @@ def home(request: Request):
         request,
         "index.html",
         {
-            "tem_ia": bool(os.getenv("OPENAI_API_KEY")),
+            "tem_ia": ia_ativa(),
             "tem_capa": encontra_capa() is not None,
             "logos_operadoras": operadoras_disponiveis(),
         },
@@ -122,7 +123,7 @@ def favicon():
 
 @app.get("/api/saude")
 def saude():
-    return {"ok": True, "ia": bool(os.getenv("OPENAI_API_KEY")), "modelo": os.getenv("ELIH_MODELO_IA", "gpt-4o-mini")}
+    return {"ok": True, "ia": ia_ativa(), "modelo": os.getenv("ELIH_MODELO_IA", "gpt-4o-mini")}
 
 
 @app.get("/api/diagnostico")
@@ -146,8 +147,10 @@ def diagnostico():
     return {
         "ok": True,
         "ia": {
+            "ativa": ia_ativa(),
             "chave": bool(os.getenv("OPENAI_API_KEY")),
             "modelo": os.getenv("ELIH_MODELO_IA", "gpt-4o-mini"),
+            "como_ligar": "definir ELIH_IA=1 com credito na conta OpenAI",
         },
         "capa": capa.name if capa else None,
         "logos": {
@@ -320,7 +323,7 @@ def gerar(
         "cidades": [c.strip() for c in cidades.split("|") if c.strip()],
         "possui_plano": _bool(possui_plano),
         "tipo_cnpj": tipo_cnpj or None,
-        "usar_ia": _bool(usar_ia) and bool(os.getenv("OPENAI_API_KEY")),
+        "usar_ia": _bool(usar_ia) and ia_ativa(),
     }
 
     destino = SAIDAS / f"{sessao}_{nome_arquivo(doc, ctx)}"

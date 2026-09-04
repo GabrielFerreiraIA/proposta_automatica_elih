@@ -34,6 +34,25 @@ def chave_ia() -> str | None:
     return os.getenv("OPENAI_API_KEY") or None
 
 
+def ia_ativa() -> bool:
+    """
+    A camada de IA está DESLIGADA por padrão.
+
+    Foi desativada quando a conta da OpenAI ficou sem crédito. Deixar ligada
+    nesse estado é pior que desligar: cada geração tentava a API, esperava o
+    429 e só então caía na copy de regras — segundos a mais por proposta para
+    chegar exatamente no mesmo texto.
+
+    A copy de regras é a versão revisada por humano e cobre tudo sozinha; o
+    refino por IA sempre foi um acabamento opcional.
+
+    Para religar: ter crédito na conta e definir ELIH_IA=1 no ambiente.
+    """
+    if os.getenv("ELIH_IA", "0").strip().lower() not in ("1", "true", "sim", "on"):
+        return False
+    return bool(chave_ia())
+
+
 # --------------------------------------------------------------------------
 # Camada 1 — regras
 # --------------------------------------------------------------------------
@@ -441,9 +460,9 @@ def refina_com_ia(payload: dict[str, Any]) -> tuple[dict[str, Any], str]:
     Qualquer falha — sem chave, erro de rede, resposta inválida — mantém a copy
     das regras e reporta o motivo, sem quebrar a geração.
     """
+    if not ia_ativa():
+        return payload, "regras curadas (IA desligada)"
     chave = chave_ia()
-    if not chave:
-        return payload, "regras (sem OPENAI_API_KEY)"
 
     entrada = {"resumo": payload["resumo"], "objecoes": payload["objecoes"]}
     try:
@@ -523,10 +542,10 @@ def monta_copy(cot: Cotacao, rede: dict, ctx: dict[str, Any], coluna_idx: int = 
         "proximos_passos": proximos_passos(ctx),
         "diferenciais": DIFERENCIAIS_ELIH,
     }
-    if ctx.get("usar_ia"):
+    if ctx.get("usar_ia") and ia_ativa():
         payload, status = refina_com_ia(payload)
     else:
-        status = "regras (IA desligada)"
+        status = "regras curadas"
     payload["motor"] = status
     return payload
 
